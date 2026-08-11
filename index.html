@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JNV Result Studio</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--navy:#0b1f4b;--blue:#2563eb;--violet:#7c3aed;--cyan:#06b6d4;--pink:#ec4899;--orange:#f97316;--green:#059669;--red:#dc2626;--amber:#d97706;--ink:#172033;--muted:#64748b;--line:#dce4f0;--paper:rgba(255,255,255,.9);--shadow:0 18px 45px rgba(30,41,59,.13)}*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink)}body{overflow:hidden;background:radial-gradient(circle at 7% 5%,rgba(37,99,235,.2),transparent 27%),radial-gradient(circle at 95% 10%,rgba(236,72,153,.16),transparent 25%),linear-gradient(135deg,#f8fafc,#eef2ff 48%,#fff7ed)}button,input,select,textarea{font:inherit}.app{height:100vh;overflow:hidden}.topbar{height:78px;padding:12px 24px;color:#fff;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(115deg,#081a3c,#1d4ed8 48%,#7e22ce);box-shadow:0 12px 35px rgba(15,23,42,.3);position:relative;z-index:20}.brand{display:flex;align-items:center;gap:13px}.logo{width:51px;height:51px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,#fff,#dbeafe);color:#1d4ed8;font-weight:950;font-size:20px;box-shadow:0 9px 0 rgba(15,23,42,.18),inset 0 2px 0 #fff;transform:perspective(300px) rotateY(-7deg)}.brand h1{font-size:20px;margin:0}.brand small{opacity:.82}.header-actions{display:flex;gap:9px;flex-wrap:wrap}.layout{height:calc(100vh - 78px);display:grid;grid-template-columns:255px minmax(0,1fr);overflow:hidden}.sidebar{height:100%;overflow:auto;padding:20px 14px;background:rgba(255,255,255,.92);backdrop-filter:blur(18px);border-right:1px solid rgba(255,255,255,.8);box-shadow:8px 0 28px rgba(51,65,85,.07)}.nav{display:flex;flex-direction:column;gap:7px}.nav button{border:0;background:transparent;text-align:left;padding:13px 14px;border-radius:14px;color:#475569;font-weight:750;cursor:pointer;transition:.22s}.nav button:hover,.nav button.active{color:#3730a3;background:linear-gradient(135deg,#eef2ff,#f5f3ff);transform:translateX(4px);box-shadow:0 8px 20px rgba(79,70,229,.1)}.side-note{margin-top:20px;padding:14px;border-radius:17px;color:#fff;background:linear-gradient(145deg,#0f766e,#2563eb);box-shadow:0 15px 30px rgba(37,99,235,.22);font-size:12px;line-height:1.55}.content{height:100%;overflow-y:auto;overflow-x:hidden;padding:27px 29px 55px;scrollbar-gutter:stable}.page{display:none}.page.active{display:block;animation:pageIn .3s ease}@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.page-title{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:19px}.page-title h2{margin:0;font-size:29px;background:linear-gradient(90deg,#0b1f4b,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}.page-title p{margin:6px 0 0;color:var(--muted)}.grid{display:grid;gap:17px}.kpis{grid-template-columns:repeat(5,minmax(145px,1fr))}.two{grid-template-columns:1.15fr .85fr}.three{grid-template-columns:repeat(3,1fr)}.card{position:relative;background:var(--paper);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.95);border-radius:21px;padding:19px;box-shadow:0 13px 0 -8px rgba(37,99,235,.09),var(--shadow);overflow:hidden;transition:.25s}.card:hover{transform:translateY(-3px);box-shadow:0 16px 0 -8px rgba(124,58,237,.1),0 28px 58px rgba(30,41,59,.16)}.card:before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet),var(--pink))}.kpi .label{font-size:12px;color:var(--muted);font-weight:750;text-transform:uppercase;letter-spacing:.5px}.kpi .value{font-size:28px;font-weight:900;margin:8px 0 3px}.kpi .hint{font-size:12px;color:var(--muted)}.btn{border:0;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.18s}.btn:hover{transform:translateY(-2px);filter:brightness(1.03)}.btn-primary{color:#fff;background:linear-gradient(135deg,var(--blue),var(--violet));box-shadow:0 10px 23px rgba(79,70,229,.25)}.btn-light{background:#fff;color:#1e3a8a;box-shadow:0 8px 18px rgba(15,23,42,.15)}.btn-outline{background:#fff;color:var(--ink);border:1px solid var(--line)}.btn-danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}.btn-green{background:linear-gradient(135deg,#059669,#0d9488);color:#fff}.section-title{font-size:17px;margin:0 0 14px}.filters{display:flex;flex-wrap:wrap;gap:11px;margin-bottom:15px}.field{display:flex;flex-direction:column;gap:6px;min-width:145px}.field label{font-size:12px;font-weight:800;color:#475569}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 11px;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#818cf8;box-shadow:0 0 0 3px rgba(99,102,241,.12)}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;max-height:590px;background:#fff}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:10px 9px;text-align:left;white-space:nowrap}th{position:sticky;top:0;z-index:2;background:linear-gradient(#f8fafc,#eef2ff);color:#475569}tr:hover td{background:#fafbff}.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900}.pass{background:#dcfce7;color:#166534}.fail{background:#fee2e2;color:#991b1b}.incomplete{background:#fef3c7;color:#92400e}.muted{color:var(--muted)}.progress{height:9px;background:#e7edf6;border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));border-radius:99px}.list{display:flex;flex-direction:column;gap:8px}.list-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.bars{height:220px;display:flex;align-items:flex-end;gap:12px;padding-top:25px}.bar-col{flex:1;min-width:40px;text-align:center}.bar{position:relative;min-height:3px;border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#a78bfa,#2563eb);box-shadow:inset 0 2px 0 rgba(255,255,255,.4)}.bar span{position:absolute;left:50%;top:-22px;transform:translateX(-50%);font-size:11px;font-weight:850}.bar-col small{display:block;margin-top:6px}.drop{padding:28px;border:2px dashed #a5b4fc;border-radius:18px;text-align:center;cursor:pointer;background:linear-gradient(135deg,#f8faff,#f5f3ff)}.drop.drag{background:#eef2ff;border-color:#4f46e5}.drop strong{font-size:17px;display:block;margin-bottom:6px}.help{padding:13px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:13px;line-height:1.5}.success-box{padding:13px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:13px}.error-box{padding:13px;border-radius:12px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:13px}.step-box{padding:16px;border:1px solid #dbeafe;border-radius:16px;background:linear-gradient(135deg,#eff6ff,#faf5ff)}.step-title{font-weight:900;margin-bottom:12px;color:#1e3a8a}.subject-manager{display:grid;grid-template-columns:repeat(2,minmax(250px,1fr));gap:14px}.class-subject-card{border:1px solid var(--line);border-radius:15px;padding:14px;background:#fff}.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.chip{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px;font-weight:750}.chip button{border:0;background:transparent;color:#be123c;cursor:pointer;padding:0}.modal{display:none;position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.58);backdrop-filter:blur(4px);padding:16px;align-items:center;justify-content:center}.modal.open{display:flex}.modal-box{width:100%;max-width:930px;max-height:92vh;overflow:auto;background:#fff;border-radius:22px;padding:21px;box-shadow:0 30px 75px rgba(15,23,42,.28)}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.modal-head h3{margin:0}.close{border:0;background:#f1f5f9;width:35px;height:35px;border-radius:50%;cursor:pointer;font-size:20px}.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.subject-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.subject-entry{border:1px solid var(--line);border-radius:12px;padding:10px}.subject-entry b{display:block;font-size:12px;margin-bottom:8px}.subject-entry div{display:flex;gap:7px}.subject-entry input{width:50%;border:1px solid var(--line);border-radius:8px;padding:8px}.modal-actions{margin-top:17px;display:flex;justify-content:flex-end;gap:9px}.toast{position:fixed;right:22px;bottom:20px;z-index:90;display:none;padding:13px 17px;border-radius:12px;background:#172033;color:#fff;box-shadow:var(--shadow)}.toast.show{display:block}.empty{text-align:center;padding:42px;color:var(--muted)}.required{color:#dc2626}.danger-zone{background:#fff1f2;border:1px solid #fecdd3}.report-meta{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,1fr);gap:11px;background:#f8fafc;border:1px solid var(--line);padding:14px;border-radius:15px}.validation-list{max-height:220px;overflow:auto;font-size:12px;line-height:1.45}.stat-line{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line)}@media(max-width:1120px){.kpis{grid-template-columns:repeat(3,1fr)}.two,.three{grid-template-columns:1fr}.subject-manager{grid-template-columns:1fr}}@media(max-width:780px){body,.app{overflow:auto;height:auto}.topbar{height:auto;min-height:78px;align-items:flex-start}.layout{height:auto;display:block;overflow:visible}.sidebar{height:auto;position:sticky;top:0;z-index:18;padding:8px;overflow-x:auto}.nav{flex-direction:row}.nav button{white-space:nowrap}.side-note{display:none}.content{height:auto;overflow:visible;padding:16px}.kpis{grid-template-columns:repeat(2,1fr)}.form-grid,.report-meta,.subject-grid{grid-template-columns:1fr}.page-title{flex-direction:column}.header-actions .mobile-hide{display:none}}@media(max-width:480px){.kpis{grid-template-columns:1fr}.brand small{display:none}.topbar{padding:11px}.header-actions{width:100%;margin-top:8px}.brand{min-width:210px}}
+</style>
+</head>
+<body><div class="app">
+<header class="topbar"><div class="brand"><div class="logo">JNV</div><div><h1 id="brandName">JNV Result Studio</h1><small>Classes VI–XII · All-subject Excel upload · Colourful report cards</small></div></div><div class="header-actions"><button class="btn btn-light" onclick="downloadAllSubjectTemplate()">⬇ All-Subject Template</button><button class="btn btn-light mobile-hide" onclick="showPage('import')">⬆ Upload Class Marks</button><button class="btn btn-light" onclick="openStudentModal()">＋ Add Result</button></div></header>
+<div class="layout"><aside class="sidebar"><nav class="nav">
+<button class="active" data-page="dashboard" onclick="showPage('dashboard',this)">▦ Dashboard</button>
+<button data-page="students" onclick="showPage('students',this)">👥 Students & Marks</button>
+<button data-page="analysis" onclick="showPage('analysis',this)">📊 Analysis</button>
+<button data-page="reports" onclick="showPage('reports',this)">🧾 Reports</button>
+<button data-page="import" onclick="showPage('import',this)">⬆ Class Marks Upload</button>
+<button data-page="subjects" onclick="showPage('subjects',this)">📚 Class Subjects</button><button data-page="pattern" onclick="showPage('pattern',this)">🗓 Exam Pattern</button>
+<button data-page="settings" onclick="showPage('settings',this)">⚙ Settings</button>
+</nav><div class="side-note"><b>Safe result logic</b><br>Marks are checked against maximum marks. Duplicate names are matched by roll/admission number. Incomplete records are not ranked.</div></aside>
+<main class="content">
+<section id="dashboard" class="page active"><div class="page-title"><div><h2>JNV Result Dashboard</h2><p>Class VI to XII academic performance at a glance</p></div><select id="dashExam" onchange="renderAll()"></select></div><div id="kpis" class="grid kpis"></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Class Performance</h3><div id="classBars" class="bars"></div></div><div class="card"><h3 class="section-title">Top Performers</h3><div id="topStudents" class="list"></div></div></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Subject Performance</h3><div id="subjectPerformance"></div></div><div class="card"><h3 class="section-title">Pass / Fail / Incomplete</h3><div id="classPassFail"></div></div></div></section>
+<section id="students" class="page"><div class="page-title"><div><h2>Students & Marks</h2><p>Search, verify, edit and remove uploaded results</p></div><button class="btn btn-primary" onclick="openStudentModal()">＋ Add Student Result</button></div><div class="card"><div class="filters"><div class="field"><label>Search</label><input id="search" placeholder="Name, roll or admission no." oninput="renderStudents()"></div><div class="field"><label>Class</label><select id="fClass" onchange="cascadeFilters('f');renderStudents()"></select></div><div class="field"><label>Section</label><select id="fSection" onchange="renderStudents()"></select></div><div class="field"><label>Exam</label><select id="fExam" onchange="renderStudents()"></select></div><div class="field"><label>Result</label><select id="fResult" onchange="renderStudents()"><option value="">All</option><option>Pass</option><option>Fail</option><option>Incomplete</option></select></div></div><div class="table-wrap"><table><thead id="studentHead"></thead><tbody id="studentBody"></tbody></table></div></div></section>
+<section id="analysis" class="page"><div class="page-title"><div><h2>Detailed Analysis</h2><p>Subject averages, pass percentage, grades, toppers and formula checks</p></div></div><div class="card"><div class="filters"><div class="field"><label>Class</label><select id="aClass" onchange="cascadeFilters('a');renderAnalysis()"></select></div><div class="field"><label>Section</label><select id="aSection" onchange="renderAnalysis()"></select></div><div class="field"><label>Exam</label><select id="aExam" onchange="renderAnalysis()"></select></div></div><div id="analysisKpis" class="grid kpis"></div></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Subject-wise Analysis</h3><div id="subjectAnalysis"></div></div><div class="card"><h3 class="section-title">Grade Distribution</h3><div id="gradeAnalysis"></div></div></div><div class="card" style="margin-top:17px"><h3 class="section-title">Rank List (Complete Results Only)</h3><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Roll</th><th>Student</th><th>Class</th><th>Section</th><th>Total</th><th>%</th><th>Grade</th><th>Status</th></tr></thead><tbody id="topperTable"></tbody></table></div></div></section>
+<section id="reports" class="page"><div class="page-title"><div><h2>Reports & Downloads</h2><p>Professional Excel and PDF reports for JNV classes VI–XII</p></div></div><div class="grid three"><div class="card"><h3>Class Result Sheet</h3><p class="muted">All subjects, total, percentage, grade, rank and status.</p><button class="btn btn-primary" onclick="reportDialog('class')">Generate</button></div><div class="card"><h3>Subject Result Sheet</h3><p class="muted">Marks, percentage, topper, average and pass/fail list.</p><button class="btn btn-primary" onclick="reportDialog('subject')">Generate</button></div><div class="card"><h3>Pass / Fail List</h3><p class="muted">Separate lists with failed and missing subjects.</p><button class="btn btn-primary" onclick="reportDialog('status')">Generate</button></div><div class="card"><h3>School Topper Report</h3><p class="muted">Class toppers and subject toppers for each exam.</p><button class="btn btn-primary" onclick="reportDialog('school')">Generate</button></div><div class="card"><h3>Student Report Cards</h3><p class="muted">Colourful one-page report card for every selected student, with result summary and signatures.</p><button class="btn btn-primary" onclick="reportDialog('cards')">Generate</button></div><div class="card"><h3>Complete Excel Workbook</h3><p class="muted">Master data plus class and subject summaries.</p><button class="btn btn-outline" onclick="reportDialog('complete')">Download</button></div></div></section>
+<section id="import" class="page"><div class="page-title"><div><h2>Class-wise All-Subject Excel Upload</h2><p>Upload name, roll number, admission number and all subject marks together in one sheet</p></div></div><div class="grid two"><div class="card"><div class="step-box"><div class="step-title">Step 1 — Select class result details</div><div class="form-grid"><div class="field"><label>Class <span class="required">*</span></label><select id="uClass" onchange="refreshUploadSubjects()"></select></div><div class="field"><label>Section <span class="required">*</span></label><input id="uSection" placeholder="A"></div><div class="field"><label>Exam <span class="required">*</span></label><select id="uExam" onchange="updateExamUploadMode()"></select></div><div class="field"><label>Default Maximum Marks</label><input id="uMax" type="number" min="1" value="100"></div><div class="field"><label>Class Teacher</label><input id="uTeacher" placeholder="Teacher name"></div></div></div><div class="step-box" style="margin-top:14px"><div class="step-title">Step 2 — Upload one Excel for all subjects</div><div id="drop" class="drop" onclick="document.getElementById('subjectFile').click()"><strong>Drop class marks Excel here</strong><span class="muted">Columns: Student Name, Roll No, Admission No, Subject 1, Subject 2, Subject 3…</span><input id="subjectFile" type="file" accept=".xlsx,.xls,.csv" hidden onchange="importAllSubjectExcel(this.files[0])"></div></div><div id="importPreview" style="margin-top:14px"></div></div><div class="card"><h3 class="section-title">All-Subject Excel Format</h3><div class="help"><b>Required columns:</b> Student Name and either Roll No or Admission No.<br><b>Subject columns:</b> Use the exact subject names configured for the selected class.<br><b>Marks format:</b> For UT exams, enter subject marks directly. For Half-Yearly/Annual, the downloaded template includes theory and internal/practical components. You may also use 78/100 for a custom maximum.<br>All student records, totals, percentage, grade, result and rank are created automatically.</div><div class="list" style="margin-top:12px"><div class="list-row"><div><b>Download all-subject class template</b><div class="muted">Automatically includes subjects of the selected class</div></div><button class="btn btn-primary" onclick="downloadAllSubjectTemplate()">Download</button></div><div class="list-row"><div><b>Download subject-wise template</b><div class="muted">Optional old four-column upload format</div></div><button class="btn btn-outline" onclick="downloadSubjectTemplate()">Download</button></div><div class="list-row"><div><b>Download class roster template</b><div class="muted">Optional student master data</div></div><button class="btn btn-outline" onclick="downloadRosterTemplate()">Download</button></div><div class="list-row"><div><b>Upload class roster</b><div class="muted">Name, roll, admission no., gender and DOB</div></div><button class="btn btn-outline" onclick="document.getElementById('rosterFile').click()">Upload</button><input id="rosterFile" hidden type="file" accept=".xlsx,.xls,.csv" onchange="importRoster(this.files[0])"></div><div class="list-row"><div><b>Backup all local data</b><div class="muted">Save and restore on another computer</div></div><button class="btn btn-outline" onclick="exportJSON()">Backup</button></div><div class="list-row"><div><b>Restore backup</b><div class="muted">Restore a JSON backup file</div></div><button class="btn btn-outline" onclick="document.getElementById('jsonFile').click()">Restore</button><input id="jsonFile" hidden type="file" accept=".json" onchange="restoreJSON(this.files[0])"></div></div></div></div></section>
+<section id="subjects" class="page"><div class="page-title"><div><h2>Class-wise Subjects</h2><p>Classes XI and XII can have any Science, Commerce, Humanities or vocational combination</p></div></div><div class="card"><div class="help"><b>Important:</b> A result is marked <b>Incomplete</b> until all configured subjects for that class have marks. Only complete results receive ranks.</div><div id="subjectManager" class="subject-manager" style="margin-top:15px"></div><div style="margin-top:15px"><button class="btn btn-primary" onclick="saveSubjectConfig()">Save Class Subjects</button></div></div></section>
+<section id="pattern" class="page"><div class="page-title"><div><h2>Class-wise Exam & Assessment Pattern</h2><p>Automatic maximum marks, internal assessment, practical marks and grade rules</p></div></div>
+<div class="grid three"><div class="card"><h3>Classes 6–8</h3><div class="list"><div class="list-row"><span>UT-1, UT-2, UT-3, UT-4</span><b>25</b></div><div class="list-row"><span>Half-Yearly Theory</span><b>80</b></div><div class="list-row"><span>Annual Theory</span><b>80</b></div><div class="list-row"><span>Internal Assessment</span><b>20</b></div></div><p class="muted">Internal: Best UT converted to 5 + Notebook 5 + Subject Enrichment 5 + Multiple Assessment 5.</p></div>
+<div class="card"><h3>Classes 9–10</h3><div class="list"><div class="list-row"><span>UT-1, UT-2, UT-3</span><b>30</b></div><div class="list-row"><span>Half-Yearly / Annual Theory</span><b>80</b></div><div class="list-row"><span>Pre-Board</span><b>80</b></div><div class="list-row"><span>Internal Assessment</span><b>20</b></div></div><p class="muted">Internal: Periodic Test 5 + Notebook 5 + Subject Enrichment 5 + Multiple Assessment 5.</p></div>
+<div class="card"><h3>Classes 11–12</h3><div class="list"><div class="list-row"><span>UT-1, UT-2, UT-3</span><b>30</b></div><div class="list-row"><span>Half-Yearly / Annual Theory</span><b>70</b></div><div class="list-row"><span>Practical</span><b>30</b></div><div class="list-row"><span>Final Subject Total</span><b>100</b></div></div><p class="muted">For non-practical subjects, enter the applicable maximum directly in the Excel cell as Obtained/Maximum.</p></div></div>
+<div class="card" style="margin-top:17px"><h3>Automatic Grade Scale</h3><div class="table-wrap"><table><thead><tr><th>Percentage</th><th>Grade</th><th>Percentage</th><th>Grade</th></tr></thead><tbody><tr><td>91–100</td><td>A1</td><td>81–90</td><td>A2</td></tr><tr><td>71–80</td><td>B1</td><td>61–70</td><td>B2</td></tr><tr><td>51–60</td><td>C1</td><td>41–50</td><td>C2</td></tr><tr><td>33–40</td><td>D</td><td>Below 33</td><td>E</td></tr></tbody></table></div></div>
+<div class="card" style="margin-top:17px"><h3>Suggested Academic Calendar</h3><div class="table-wrap"><table><thead><tr><th>Month</th><th>Examination</th></tr></thead><tbody><tr><td>April</td><td>Session Starts</td></tr><tr><td>July</td><td>UT-1</td></tr><tr><td>September</td><td>Half-Yearly</td></tr><tr><td>November</td><td>UT-2</td></tr><tr><td>January</td><td>UT-3</td></tr><tr><td>February</td><td>UT-4 / Pre-Board, if conducted</td></tr><tr><td>March</td><td>Annual Examination / Board Exams</td></tr></tbody></table></div></div></section><section id="settings" class="page"><div class="page-title"><div><h2>School Settings</h2><p>Configure school identity, academic session and result rules</p></div></div><div class="card"><div class="form-grid"><div class="field"><label>School Name</label><input id="sName"></div><div class="field"><label>Academic Session</label><input id="sSession" placeholder="2026-27"></div><div class="field"><label>Overall Pass Percentage</label><input id="sPass" type="number" min="0" max="100"></div><div class="field"><label>Subject Pass Percentage</label><input id="sSubjectPass" type="number" min="0" max="100"></div><div class="field"><label>Principal Name</label><input id="sPrincipal"></div><div class="field"><label>School Address</label><input id="sAddress"></div></div><button class="btn btn-primary" style="margin-top:15px" onclick="saveSettings()">Save Settings</button></div><div class="card danger-zone" style="margin-top:17px"><h3>Reset Data</h3><p>This permanently removes all locally saved students and marks from this browser.</p><button class="btn btn-danger" onclick="resetData()">Delete All Result Data</button></div></section>
+</main></div></div>
+<div id="studentModal" class="modal"><div class="modal-box"><div class="modal-head"><h3>Add / Edit Student Result</h3><button class="close" onclick="closeModal('studentModal')">×</button></div><div class="form-grid"><div class="field"><label>Student Name *</label><input id="mName"></div><div class="field"><label>Roll No. *</label><input id="mRoll"></div><div class="field"><label>Admission No.</label><input id="mAdm"></div><div class="field"><label>Class *</label><select id="mClass" onchange="renderMarkInputs()"></select></div><div class="field"><label>Section *</label><input id="mSection" placeholder="A"></div><div class="field"><label>Exam *</label><input id="mExam" placeholder="Annual Examination"></div><div class="field"><label>Class Teacher</label><input id="mTeacher"></div><div class="field"><label>Gender</label><select id="mGender"><option></option><option>Boy</option><option>Girl</option><option>Other</option></select></div><div class="field"><label>Date of Birth</label><input id="mDob" type="date"></div></div><div id="markInputs" class="subject-grid"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('studentModal')">Cancel</button><button class="btn btn-primary" onclick="saveStudent()">Save Result</button></div></div></div>
+<div id="reportModal" class="modal"><div class="modal-box" style="max-width:760px"><div class="modal-head"><h3>Generate Professional Report</h3><button class="close" onclick="closeModal('reportModal')">×</button></div><div class="report-meta"><div class="field"><label>School Name <span class="required">*</span></label><input id="rSchoolName"></div><div class="field"><label>Class Teacher Name <span class="required">*</span></label><input id="rTeacherName"></div><div class="field"><label>Academic Session</label><input id="rSession"></div><div class="field"><label>School Address</label><input id="rAddress"></div></div><div class="form-grid" style="margin-top:13px"><div class="field" id="rClassWrap"><label>Class</label><select id="rClass" onchange="cascadeFilters('r');refreshReportSubjects()"></select></div><div class="field" id="rSectionWrap"><label>Section</label><select id="rSection"></select></div><div class="field" id="rExamWrap"><label>Exam</label><select id="rExam"></select></div><div class="field" id="rSubjectWrap"><label>Subject</label><select id="rSubject"></select></div><div class="field" id="rStatusWrap"><label>Status</label><select id="rStatus"><option>Pass</option><option>Fail</option><option>Incomplete</option><option>All</option></select></div></div><input type="hidden" id="rType"><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('reportModal')">Cancel</button><button class="btn btn-outline" onclick="generateReport('xlsx')">⬇ Excel</button><button id="pdfReportBtn" class="btn btn-primary" onclick="generateReport('pdf')">⬇ PDF</button></div></div></div>
+<div id="toast" class="toast"></div>
+<script>
+const KEY='jnvResultStudio_v3';
+const CLASSES=['6','7','8','9','10','11','12'];
+const baseSubjects=['English','Hindi','Mathematics','Science','Social Science','Sanskrit','Computer'];
+const defaults={settings:{schoolName:'Jawahar Navodaya Vidyalaya',session:'2026-27',passPercentage:33,subjectPassPercentage:33,principal:'',classTeacher:'',address:'',subjectsByClass:{'6':[...baseSubjects],'7':[...baseSubjects],'8':[...baseSubjects],'9':['English','Hindi','Mathematics','Science','Social Science','Information Technology'],'10':['English','Hindi','Mathematics','Science','Social Science','Information Technology'],'11':['English'],'12':['English']}},records:[],roster:[]};
+let state=loadState(),editingId=null;
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function loadState(){try{let x=JSON.parse(localStorage.getItem(KEY));if(!x){let old=JSON.parse(localStorage.getItem('schoolResultPro_v1')||'null');if(old)x=migrateOld(old)}return normalizeState(x||clone(defaults))}catch(e){return clone(defaults)}}
+function migrateOld(old){let x=clone(defaults);x.settings={...x.settings,...old.settings};x.records=(old.records||[]).map(r=>({...r,className:normalizeClass(r.className),marks:r.marks||{}}));return x}
+function normalizeState(x){x.settings={...clone(defaults).settings,...(x.settings||{})};x.settings.subjectsByClass={...clone(defaults).settings.subjectsByClass,...(x.settings.subjectsByClass||{})};x.records=Array.isArray(x.records)?x.records:[];x.roster=Array.isArray(x.roster)?x.roster:[];x.records.forEach(r=>{r.className=normalizeClass(r.className);r.marks=r.marks||{}});return x}
+function persist(){localStorage.setItem(KEY,JSON.stringify(state))}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function n(v){let x=Number(v);return Number.isFinite(x)?x:NaN}
+function clean(v){return String(v??'').trim()}
+function norm(v){return clean(v).toLowerCase().replace(/\b(mr|mrs|ms|miss|master|kumari|shri|smt)\.?\b/g,'').replace(/[^a-z0-9\u0900-\u097f]/g,'')}
+function normalizeClass(v){let s=clean(v).toUpperCase().replace(/CLASS|STD|GRADE|-/g,'').trim();let map={VI:'6',VII:'7',VIII:'8',IX:'9',X:'10',XI:'11',XII:'12'};return map[s]||String(parseInt(s,10)||s)}
+function toast(msg){let t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function uniq(a){return [...new Set(a.map(clean).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))}
+function classSubjects(cl){return uniq(state.settings.subjectsByClass[normalizeClass(cl)]||[])}
+function allSubjects(){return uniq([...Object.values(state.settings.subjectsByClass).flat(),...state.records.flatMap(r=>Object.keys(r.marks||{}))])}
+function validMark(m){return m&&Number.isFinite(n(m.score))&&Number.isFinite(n(m.max))&&n(m.max)>0&&n(m.score)>=0&&n(m.score)<=n(m.max)}
+function grade(p,status){if(status==='Incomplete')return'—';if(status==='Fail'&&p<33)return'E';if(p>=91)return'A1';if(p>=81)return'A2';if(p>=71)return'B1';if(p>=61)return'B2';if(p>=51)return'C1';if(p>=41)return'C2';if(p>=33)return'D';return'E'}
+function calc(r){let required=classSubjects(r.className),present=Object.entries(r.marks||{}).filter(([,m])=>validMark(m)),missing=required.filter(s=>!validMark(r.marks?.[s]));let invalid=Object.entries(r.marks||{}).filter(([,m])=>!validMark(m)).map(([s])=>s);let obtained=present.reduce((a,[,m])=>a+n(m.score),0),maximum=present.reduce((a,[,m])=>a+n(m.max),0),pct=maximum?obtained/maximum*100:0;let failed=present.filter(([,m])=>n(m.score)<n(m.max)*state.settings.subjectPassPercentage/100).map(([s])=>s);let status=missing.length||invalid.length?'Incomplete':failed.length||pct<state.settings.passPercentage?'Fail':'Pass';return{obtained,maximum,pct,missing,invalid,failed,status,grade:grade(pct,status),complete:status!=='Incomplete'}}
+function compareRank(a,b){let ca=calc(a),cb=calc(b);return cb.pct-ca.pct||cb.obtained-ca.obtained||clean(a.name).localeCompare(clean(b.name))}
+function ranks(rows){let sorted=rows.filter(r=>calc(r).complete).sort(compareRank),last=null,rank=0;return sorted.map((r,i)=>{let c=calc(r),key=c.pct.toFixed(8)+'|'+c.obtained;if(key!==last)rank=i+1;last=key;return{...r,_rank:rank}})}
+function options(id,arr,all=true){let e=document.getElementById(id);if(!e)return;let old=e.value;e.innerHTML=(all?'<option value="">All</option>':'')+arr.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');if([...e.options].some(o=>o.value===old))e.value=old}
+function classesWithData(){return uniq([...CLASSES,...state.records.map(r=>r.className)])}
+function sectionsFor(cl=''){return uniq(state.records.filter(r=>!cl||r.className===cl).map(r=>r.section))}
+function examsFor(cl=''){return uniq(state.records.filter(r=>!cl||r.className===cl).map(r=>r.exam))}
+function showPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));if(id==='subjects')renderSubjectManager();if(id==='analysis')renderAnalysis();if(id==='students')renderStudents()}
+function refreshSelects(){['fClass','aClass','rClass'].forEach(id=>options(id,classesWithData()));options('mClass',CLASSES,false);options('uClass',CLASSES,false);['fExam','aExam','rExam','dashExam'].forEach(id=>options(id,examsFor()));['fSection','aSection','rSection'].forEach(id=>options(id,sectionsFor()));refreshUploadSubjects();refreshReportSubjects()}
+function cascadeFilters(prefix){let cl=document.getElementById(prefix+'Class')?.value||'';options(prefix+'Section',sectionsFor(cl));if(document.getElementById(prefix+'Exam'))options(prefix+'Exam',examsFor(cl))}
+function filtered(ex='',cl='',sec=''){return state.records.filter(r=>(!ex||r.exam===ex)&&(!cl||r.className===cl)&&(!sec||r.section===sec))}
+function renderAll(){refreshSelects();renderDashboard();renderStudents();renderAnalysis();renderSubjectManager();loadSettings();document.getElementById('brandName').textContent=state.settings.schoolName||'JNV Result Studio'}
+function renderDashboard(){let ex=document.getElementById('dashExam').value,rows=filtered(ex),cs=rows.map(calc),p=cs.filter(x=>x.status==='Pass').length,f=cs.filter(x=>x.status==='Fail').length,inc=cs.filter(x=>x.status==='Incomplete').length,complete=cs.filter(x=>x.complete),avg=complete.length?complete.reduce((a,x)=>a+x.pct,0)/complete.length:0;document.getElementById('kpis').innerHTML=[['Student Results',rows.length,'all saved records'],['Pass',p,rows.length?`${(p/rows.length*100).toFixed(1)}% of records`:'No data'],['Fail',f,'complete but below criteria'],['Incomplete',inc,'missing or invalid marks'],['Average',avg.toFixed(1)+'%','complete records only']].map(x=>`<div class="card kpi"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="hint">${x[2]}</div></div>`).join('');let cls=uniq(rows.map(r=>r.className)),vals=cls.map(k=>{let a=rows.filter(r=>r.className===k).map(calc).filter(x=>x.complete);return a.length?a.reduce((z,x)=>z+x.pct,0)/a.length:0});document.getElementById('classBars').innerHTML=cls.length?cls.map((x,i)=>`<div class="bar-col"><div class="bar" style="height:${Math.max(3,vals[i]*1.8)}px"><span>${vals[i].toFixed(0)}%</span></div><small>${esc(x)}</small></div>`).join(''):'<div class="empty">Upload marks to see charts</div>';let top=ranks(rows).slice(0,7);document.getElementById('topStudents').innerHTML=top.length?top.map(r=>`<div class="list-row"><div><b>#${r._rank} ${esc(r.name)}</b><div class="muted">Class ${esc(r.className)}-${esc(r.section)} · Roll ${esc(r.rollNo)}</div></div><strong>${calc(r).pct.toFixed(2)}%</strong></div>`).join(''):'<div class="empty">No complete results</div>';let subs=uniq(rows.flatMap(r=>Object.keys(r.marks||{})));document.getElementById('subjectPerformance').innerHTML=subs.map(s=>{let a=rows.map(r=>r.marks?.[s]).filter(validMark),av=a.length?a.reduce((z,m)=>z+n(m.score)/n(m.max)*100,0)/a.length:0;return `<div style="margin:11px 0"><div style="display:flex;justify-content:space-between"><span>${esc(s)}</span><b>${av.toFixed(1)}%</b></div><div class="progress"><i style="width:${Math.min(100,av)}%"></i></div></div>`}).join('')||'<div class="empty">No subject data</div>';document.getElementById('classPassFail').innerHTML=cls.map(cl=>{let a=rows.filter(r=>r.className===cl),s=a.map(calc),pp=s.filter(x=>x.status==='Pass').length,ff=s.filter(x=>x.status==='Fail').length,ii=s.filter(x=>x.status==='Incomplete').length;return `<div class="list-row"><div><b>Class ${esc(cl)}</b><div class="muted">${pp} pass · ${ff} fail · ${ii} incomplete</div></div><b>${a.length?(pp/a.length*100).toFixed(1):0}%</b></div>`}).join('')||'<div class="empty">No class data</div>'}
+function renderStudents(){let q=norm(document.getElementById('search').value),cl=document.getElementById('fClass').value,sec=document.getElementById('fSection').value,ex=document.getElementById('fExam').value,st=document.getElementById('fResult').value,rows=state.records.filter(r=>(!q||[r.name,r.rollNo,r.admissionNo].some(x=>norm(x).includes(q)))&&(!cl||r.className===cl)&&(!sec||r.section===sec)&&(!ex||r.exam===ex)&&(!st||calc(r).status===st)),subs=cl?classSubjects(cl):uniq(rows.flatMap(r=>Object.keys(r.marks||{})));document.getElementById('studentHead').innerHTML='<tr><th>Roll</th><th>Student</th><th>Class</th><th>Section</th><th>Exam</th>'+subs.map(s=>`<th>${esc(s)}</th>`).join('')+'<th>Total</th><th>%</th><th>Grade</th><th>Status</th><th>Issues</th><th>Actions</th></tr>';document.getElementById('studentBody').innerHTML=rows.length?rows.map(r=>{let c=calc(r),issues=[...c.missing.map(x=>'Missing '+x),...c.invalid.map(x=>'Invalid '+x),...c.failed.map(x=>'Fail '+x)].join(', ');return `<tr><td>${esc(r.rollNo)}</td><td><b>${esc(r.name)}</b><br><small class="muted">${esc(r.admissionNo||'')}</small></td><td>${esc(r.className)}</td><td>${esc(r.section)}</td><td>${esc(r.exam)}</td>${subs.map(s=>{let m=r.marks?.[s];return `<td>${validMark(m)?`${m.score}/${m.max}`:'—'}</td>`}).join('')}<td>${c.obtained}/${c.maximum}</td><td>${c.pct.toFixed(2)}</td><td>${c.grade}</td><td><span class="badge ${c.status.toLowerCase()}">${c.status}</span></td><td title="${esc(issues)}">${esc(issues||'—')}</td><td><button class="btn btn-outline" style="padding:6px 8px" onclick="editStudent('${r.id}')">Edit</button> <button class="btn btn-danger" style="padding:6px 8px" onclick="deleteStudent('${r.id}')">Delete</button></td></tr>`}).join(''):'<tr><td colspan="99" class="empty">No matching result</td></tr>'}
+function renderAnalysis(){let cl=document.getElementById('aClass').value,sec=document.getElementById('aSection').value,ex=document.getElementById('aExam').value,rows=filtered(ex,cl,sec),cs=rows.map(calc),complete=cs.filter(x=>x.complete),pass=cs.filter(x=>x.status==='Pass').length,avg=complete.length?complete.reduce((a,x)=>a+x.pct,0)/complete.length:0,hi=complete.length?Math.max(...complete.map(x=>x.pct)):0,lo=complete.length?Math.min(...complete.map(x=>x.pct)):0;document.getElementById('analysisKpis').innerHTML=[['Students',rows.length],['Pass %',rows.length?(pass/rows.length*100).toFixed(1)+'%':'0%'],['Average',avg.toFixed(2)+'%'],['Highest',hi.toFixed(2)+'%'],['Incomplete',cs.filter(x=>x.status==='Incomplete').length]].map(x=>`<div class="card kpi"><div class="label">${x[0]}</div><div class="value">${x[1]}</div></div>`).join('');let subs=cl?classSubjects(cl):uniq(rows.flatMap(r=>Object.keys(r.marks||{})));document.getElementById('subjectAnalysis').innerHTML='<div class="table-wrap"><table><thead><tr><th>Subject</th><th>Appeared</th><th>Average</th><th>Highest</th><th>Lowest</th><th>Pass %</th><th>Topper</th></tr></thead><tbody>'+subs.map(s=>{let a=rows.map(r=>({r,m:r.marks?.[s]})).filter(x=>validMark(x.m)),per=a.map(x=>n(x.m.score)/n(x.m.max)*100),passed=a.filter(x=>n(x.m.score)>=n(x.m.max)*state.settings.subjectPassPercentage/100),top=[...a].sort((x,y)=>n(y.m.score)/n(y.m.max)-n(x.m.score)/n(x.m.max))[0];return `<tr><td>${esc(s)}</td><td>${a.length}</td><td>${a.length?(per.reduce((z,x)=>z+x,0)/a.length).toFixed(1):0}%</td><td>${a.length?Math.max(...per).toFixed(1):0}%</td><td>${a.length?Math.min(...per).toFixed(1):0}%</td><td>${a.length?(passed.length/a.length*100).toFixed(1):0}%</td><td>${top?esc(top.r.name):'—'}</td></tr>`}).join('')+'</tbody></table></div>';let grades=['A1','A2','B1','B2','C1','C2','D','E','—'];document.getElementById('gradeAnalysis').innerHTML=grades.map(g=>{let ct=cs.filter(x=>x.grade===g).length,p=cs.length?ct/cs.length*100:0;return `<div style="margin:12px 0"><div style="display:flex;justify-content:space-between"><span>Grade ${g}</span><b>${ct} (${p.toFixed(1)}%)</b></div><div class="progress"><i style="width:${p}%"></i></div></div>`}).join('');let ranked=ranks(rows);document.getElementById('topperTable').innerHTML=ranked.map(r=>{let c=calc(r);return `<tr><td>${r._rank}</td><td>${esc(r.rollNo)}</td><td>${esc(r.name)}</td><td>${esc(r.className)}</td><td>${esc(r.section)}</td><td>${c.obtained}/${c.maximum}</td><td>${c.pct.toFixed(2)}%</td><td>${c.grade}</td><td>${c.status}</td></tr>`}).join('')||'<tr><td colspan="9" class="empty">No complete results available for ranking</td></tr>'}
+function refreshUploadSubjects(){let cl=document.getElementById('uClass').value||'6';options('uSubject',classSubjects(cl),false)}
+function refreshReportSubjects(){let cl=document.getElementById('rClass').value;options('rSubject',cl?classSubjects(cl):allSubjects(),false)}
+function renderSubjectManager(){let host=document.getElementById('subjectManager');host.innerHTML=CLASSES.map(cl=>`<div class="class-subject-card"><h3 style="margin:0">Class ${cl}</h3><div class="chips" id="chips${cl}">${classSubjects(cl).map(s=>`<span class="chip">${esc(s)} <button onclick="removeSubject('${cl}','${encodeURIComponent(s)}')">×</button></span>`).join('')}</div><div style="display:flex;gap:8px;margin-top:11px"><input id="addSub${cl}" placeholder="Add subject" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:9px"><button class="btn btn-outline" onclick="addSubject('${cl}')">Add</button></div>${cl==='11'||cl==='12'?`<div class="chips"><button class="btn btn-outline" style="padding:6px 9px" onclick="applyPreset('${cl}','science')">Science</button><button class="btn btn-outline" style="padding:6px 9px" onclick="applyPreset('${cl}','commerce')">Commerce</button><button class="btn btn-outline" style="padding:6px 9px" onclick="applyPreset('${cl}','humanities')">Humanities</button></div>`:''}</div>`).join('')}
+function addSubject(cl){let e=document.getElementById('addSub'+cl),v=clean(e.value);if(!v)return;state.settings.subjectsByClass[cl]=uniq([...classSubjects(cl),v]);e.value='';renderSubjectManager()}
+function removeSubject(cl,s){s=decodeURIComponent(s);if(state.records.some(r=>r.className===cl&&r.marks?.[s])&&!confirm(`${s} already has uploaded marks. Remove it from required subjects anyway?`))return;state.settings.subjectsByClass[cl]=classSubjects(cl).filter(x=>x!==s);renderSubjectManager()}
+function applyPreset(cl,type){let p={science:['English','Physics','Chemistry','Mathematics','Biology','Computer Science','Physical Education'],commerce:['English','Accountancy','Business Studies','Economics','Mathematics','Informatics Practices','Physical Education'],humanities:['English','History','Political Science','Geography','Economics','Hindi','Physical Education']}[type];state.settings.subjectsByClass[cl]=uniq(p);renderSubjectManager()}
+function saveSubjectConfig(){for(let cl of CLASSES)if(!classSubjects(cl).length)return toast(`Add at least one subject for Class ${cl}`);persist();renderAll();toast('Class-wise subjects saved')}
+function openStudentModal(r=null){editingId=r?.id||null;['mName','mRoll','mAdm','mSection','mExam','mTeacher','mDob'].forEach(id=>document.getElementById(id).value='');document.getElementById('mGender').value='';document.getElementById('mClass').value=r?.className||'6';if(r){document.getElementById('mName').value=r.name;document.getElementById('mRoll').value=r.rollNo;document.getElementById('mAdm').value=r.admissionNo||'';document.getElementById('mSection').value=r.section;document.getElementById('mExam').value=r.exam;document.getElementById('mTeacher').value=r.classTeacher||'';document.getElementById('mGender').value=r.gender||'';document.getElementById('mDob').value=r.dob||''}renderMarkInputs(r);document.getElementById('studentModal').classList.add('open')}
+function renderMarkInputs(r=null){let cl=document.getElementById('mClass').value,old={};document.querySelectorAll('#markInputs .subject-entry').forEach(x=>old[x.dataset.subject]={score:x.querySelector('.score').value,max:x.querySelector('.max').value});document.getElementById('markInputs').innerHTML=classSubjects(cl).map(s=>{let m=r?.marks?.[s]||old[s]||{};return `<div class="subject-entry" data-subject="${esc(s)}"><b>${esc(s)}</b><div><input class="score" type="number" min="0" placeholder="Obtained" value="${m.score??''}"><input class="max" type="number" min="1" placeholder="Maximum" value="${m.max??100}"></div></div>`}).join('')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function saveStudent(){let name=clean(document.getElementById('mName').value),roll=clean(document.getElementById('mRoll').value),cl=normalizeClass(document.getElementById('mClass').value),section=clean(document.getElementById('mSection').value).toUpperCase(),exam=clean(document.getElementById('mExam').value);if(!name||!roll||!CLASSES.includes(cl)||!section||!exam)return toast('Complete name, roll, class, section and exam');let duplicate=state.records.find(r=>r.id!==editingId&&r.className===cl&&norm(r.section)===norm(section)&&norm(r.exam)===norm(exam)&&(norm(r.rollNo)===norm(roll)||clean(document.getElementById('mAdm').value)&&norm(r.admissionNo)===norm(document.getElementById('mAdm').value)));if(duplicate)return toast('This roll/admission number already exists for the selected class and exam');let marks={},bad=[];document.querySelectorAll('#markInputs .subject-entry').forEach(x=>{let s=x.dataset.subject,score=n(x.querySelector('.score').value),max=n(x.querySelector('.max').value);if(Number.isFinite(score)||Number.isFinite(max)){if(!Number.isFinite(score)||!Number.isFinite(max)||max<=0||score<0||score>max)bad.push(s);else marks[s]={score,max}}});if(bad.length)return toast('Invalid marks in: '+bad.join(', '));let rec={id:editingId||crypto.randomUUID(),name,rollNo:roll,admissionNo:clean(document.getElementById('mAdm').value),className:cl,section,exam,classTeacher:clean(document.getElementById('mTeacher').value),gender:document.getElementById('mGender').value,dob:document.getElementById('mDob').value,marks};if(editingId)state.records[state.records.findIndex(r=>r.id===editingId)]=rec;else state.records.push(rec);persist();closeModal('studentModal');renderAll();toast('Result saved and formula checked')}
+function editStudent(id){openStudentModal(state.records.find(r=>r.id===id))}
+function deleteStudent(id){if(confirm('Delete this student result?')){state.records=state.records.filter(r=>r.id!==id);persist();renderAll();toast('Result deleted')}}
+function readWorkbook(file){return file.arrayBuffer().then(buf=>XLSX.read(buf,{type:'array',cellDates:true}))}
+function rowValue(row,names){let entries=Object.entries(row),hit=entries.find(([k])=>names.includes(norm(k)));return hit?hit[1]:''}
+function parseFlexibleMark(value,defaultMax){let raw=clean(value);if(!raw)return null;if(raw.includes('/')){let parts=raw.split('/').map(x=>n(x.trim()));if(parts.length===2&&Number.isFinite(parts[0])&&Number.isFinite(parts[1])&&parts[1]>0&&parts[0]>=0&&parts[0]<=parts[1])return{score:parts[0],max:parts[1]};return{error:true}}let score=n(raw);if(Number.isFinite(score)&&Number.isFinite(defaultMax)&&defaultMax>0&&score>=0&&score<=defaultMax)return{score,max:defaultMax};return{error:true}}
+async function importAllSubjectExcel(file){if(!file)return;let cl=document.getElementById('uClass').value,section=clean(document.getElementById('uSection').value).toUpperCase(),exam=clean(document.getElementById('uExam').value),defMax=n(document.getElementById('uMax').value),teacher=clean(document.getElementById('uTeacher').value),subjects=classSubjects(cl);if(!cl||!section||!exam)return toast('Select class, section and exam first');if(!subjects.length)return toast('Configure subjects for this class first');try{let wb=await readWorkbook(file),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});if(!rows.length)throw Error('The sheet is empty');let headers=Object.keys(rows[0]),headerMap=new Map(headers.map(h=>[norm(h),h])),matched=subjects.filter(s=>headerMap.has(norm(s)));if(!matched.length)throw Error('No configured subject columns were found. Download the class template and keep subject headings unchanged.');let added=0,updated=0,errors=[],subjectCells=0;for(let [i,row] of rows.entries()){let line=i+2,name=clean(rowValue(row,['studentname','name','student'])),roll=clean(rowValue(row,['rollno','rollnumber','roll'])),adm=clean(rowValue(row,['admissionno','admissionnumber','admno'])),gender=clean(rowValue(row,['gender','sex'])),dob=clean(rowValue(row,['dateofbirth','dob']));if(!name){errors.push(`Row ${line}: student name is missing`);continue}if(!roll&&!adm){errors.push(`Row ${line}: roll number or admission number is required`);continue}let candidates=state.records.filter(r=>r.className===cl&&norm(r.section)===norm(section)&&norm(r.exam)===norm(exam)),rec=null;if(adm)rec=candidates.find(r=>norm(r.admissionNo)===norm(adm));if(!rec&&roll)rec=candidates.find(r=>norm(r.rollNo)===norm(roll));if(!rec){rec={id:crypto.randomUUID(),name,rollNo:roll,admissionNo:adm,className:cl,section,exam,classTeacher:teacher,gender,dob,marks:{}};state.records.push(rec);added++}else updated++;rec.name=name;rec.rollNo=roll||rec.rollNo;rec.admissionNo=adm||rec.admissionNo;rec.classTeacher=teacher||rec.classTeacher;if(gender)rec.gender=gender;if(dob)rec.dob=dob;let rowBad=[];for(let subject of matched){let raw=row[headerMap.get(norm(subject))];if(clean(raw)==='')continue;let parsed=parseFlexibleMark(raw,defMax);if(parsed?.error){rowBad.push(subject);continue}rec.marks[subject]=parsed;subjectCells++}if(rowBad.length)errors.push(`Row ${line}: invalid marks in ${rowBad.join(', ')}`)}persist();renderAll();let missingSubjects=subjects.filter(s=>!matched.includes(s));document.getElementById('importPreview').innerHTML=`<div class="${errors.length||missingSubjects.length?'error-box':'success-box'}"><b>Class upload completed:</b> ${added} new students, ${updated} updated, ${subjectCells} subject marks imported.${missingSubjects.length?`<br><b>Missing columns:</b> ${missingSubjects.map(esc).join(', ')}`:''}${errors.length?`<div class="validation-list" style="margin-top:8px"><b>${errors.length} validation notes:</b><br>${errors.map(esc).join('<br>')}</div>`:' All available rows passed validation.'}</div>`;toast(`${added+updated} student records processed`)}catch(e){document.getElementById('importPreview').innerHTML=`<div class="error-box"><b>Upload failed:</b> ${esc(e.message)}</div>`}}
+function downloadAllSubjectTemplate(){let cl=document.getElementById('uClass')?.value||'6',subjects=classSubjects(cl),header=['Student Name','Roll No','Admission No','Gender','Date of Birth',...subjects],sample1=['Aarav Sharma','1','ADM001','Boy','2013-04-15',...subjects.map((_,i)=>78+i%6)],sample2=['Ananya Singh','2','ADM002','Girl','2013-08-21',...subjects.map((_,i)=>88+i%7)],instructions=[['ALL-SUBJECT CLASS UPLOAD INSTRUCTIONS'],[`Class: ${cl}`],['1. Select Class, Section and Exam on the website before uploading.'],['2. Keep Student Name, Roll No and Admission No columns unchanged.'],['3. Keep subject headings exactly as provided.'],['4. Enter obtained marks only; default maximum marks comes from the website.'],['5. For a different maximum, enter marks as Obtained/Maximum, for example 38/50.'],['6. Leave a subject cell blank only when marks are not available; the result will remain Incomplete.']];workbookDownload({[`Class ${cl} Marks`]:[header,sample1,sample2],'Instructions':instructions},`JNV_Class_${cl}_All_Subject_Marks_Template`)}
+async function importSubjectExcel(file){if(!file)return;let cl=document.getElementById('uClass').value,section=clean(document.getElementById('uSection').value).toUpperCase(),exam=clean(document.getElementById('uExam').value),subject=document.getElementById('uSubject').value,defMax=n(document.getElementById('uMax').value),teacher=clean(document.getElementById('uTeacher').value);if(!cl||!section||!exam||!subject)return toast('Select class, section, exam and subject first');try{let wb=await readWorkbook(file),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});if(!rows.length)throw Error('The sheet is empty');let added=0,updated=0,errors=[],seen=new Set();for(let [i,row] of rows.entries()){let line=i+2,name=clean(rowValue(row,['studentname','name','student'])),roll=clean(rowValue(row,['rollno','rollnumber','roll'])),adm=clean(rowValue(row,['admissionno','admissionnumber','admno'])),score=n(rowValue(row,['marksobtained','obtainedmarks','marks','score'])),max=n(rowValue(row,['totalmarks','maximummarks','maxmarks','outof']))||defMax;if(!name){errors.push(`Row ${line}: student name is missing`);continue}if(!Number.isFinite(score)||!Number.isFinite(max)||max<=0||score<0||score>max){errors.push(`Row ${line}: invalid marks ${clean(rowValue(row,['marksobtained','obtainedmarks','marks','score']))}/${max||''}`);continue}let duplicateKey=(roll?'R'+norm(roll):'N'+norm(name));if(seen.has(duplicateKey)){errors.push(`Row ${line}: duplicate student in the uploaded sheet`);continue}seen.add(duplicateKey);let candidates=state.records.filter(r=>r.className===cl&&norm(r.section)===norm(section)&&norm(r.exam)===norm(exam));let rec=null;if(adm)rec=candidates.find(r=>norm(r.admissionNo)===norm(adm));if(!rec&&roll)rec=candidates.find(r=>norm(r.rollNo)===norm(roll));if(!rec){let byName=candidates.filter(r=>norm(r.name)===norm(name));if(byName.length===1)rec=byName[0];else if(byName.length>1){errors.push(`Row ${line}: multiple students have the name “${name}”; add Roll No`);continue}}if(!rec){let roster=state.roster.find(r=>r.className===cl&&norm(r.section)===norm(section)&&((roll&&norm(r.rollNo)===norm(roll))||adm&&norm(r.admissionNo)===norm(adm)));rec={id:crypto.randomUUID(),name:roster?.name||name,rollNo:roll||roster?.rollNo||'',admissionNo:adm||roster?.admissionNo||'',className:cl,section,exam,classTeacher:teacher,gender:roster?.gender||'',dob:roster?.dob||'',marks:{}};state.records.push(rec);added++}else updated++;rec.name=name||rec.name;if(roll)rec.rollNo=roll;if(adm)rec.admissionNo=adm;if(teacher)rec.classTeacher=teacher;rec.marks[subject]={score,max}}persist();renderAll();document.getElementById('importPreview').innerHTML=`<div class="${errors.length?'error-box':'success-box'}"><b>${subject} upload completed:</b> ${added} new students, ${updated} updated.${errors.length?`<div class="validation-list" style="margin-top:8px"><b>${errors.length} rows skipped:</b><br>${errors.map(esc).join('<br>')}</div>`:' All rows passed validation.'}</div>`;toast(`${subject}: ${added+updated} marks imported`)}catch(e){document.getElementById('importPreview').innerHTML=`<div class="error-box"><b>Upload failed:</b> ${esc(e.message)}</div>`}}
+async function importRoster(file){if(!file)return;let cl=document.getElementById('uClass').value,section=clean(document.getElementById('uSection').value).toUpperCase();if(!cl||!section)return toast('Select class and section first');try{let wb=await readWorkbook(file),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}),errors=[],count=0;for(let [i,row] of rows.entries()){let name=clean(rowValue(row,['studentname','name','student'])),roll=clean(rowValue(row,['rollno','rollnumber','roll'])),adm=clean(rowValue(row,['admissionno','admissionnumber','admno']));if(!name||(!roll&&!adm)){errors.push(`Row ${i+2}: name and roll/admission number required`);continue}let dup=state.roster.find(r=>r.className===cl&&norm(r.section)===norm(section)&&((roll&&norm(r.rollNo)===norm(roll))||(adm&&norm(r.admissionNo)===norm(adm))));let obj={id:dup?.id||crypto.randomUUID(),name,rollNo:roll,admissionNo:adm,className:cl,section,gender:clean(rowValue(row,['gender','sex'])),dob:clean(rowValue(row,['dateofbirth','dob']))};if(dup)Object.assign(dup,obj);else state.roster.push(obj);count++}persist();document.getElementById('importPreview').innerHTML=`<div class="success-box"><b>Roster imported:</b> ${count} students.${errors.length?' '+errors.length+' rows skipped.':''}</div>`;toast('Class roster imported')}catch(e){toast('Could not read roster file')}}
+function workbookDownload(sheets,name){let wb=XLSX.utils.book_new();for(let [sheet,data] of Object.entries(sheets)){let ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=data[0]?.map((_,i)=>({wch:Math.min(35,Math.max(12,...data.map(r=>String(r[i]??'').length+2)))}));XLSX.utils.book_append_sheet(wb,ws,sheet.slice(0,31))}XLSX.writeFile(wb,name+'.xlsx')}
+function downloadSubjectTemplate(){workbookDownload({'Subject Marks':[['Student Name','Roll No','Admission No','Marks Obtained','Total Marks'],['Aarav Sharma','1','ADM001',78,100],['Ananya Singh','2','ADM002',91,100]],'Instructions':[['JNV SUBJECT-WISE UPLOAD INSTRUCTIONS'],['1. Select Class, Section, Exam and Subject on the website before uploading.'],['2. Student Name and Marks Obtained are required.'],['3. Roll No is strongly recommended to prevent same-name clashes.'],['4. Marks Obtained cannot be greater than Total Marks.'],['5. Do not change column headings.']]},'JNV_Subject_Marks_Template')}
+function downloadRosterTemplate(){workbookDownload({'Class Roster':[['Student Name','Roll No','Admission No','Gender','Date of Birth'],['Aarav Sharma','1','ADM001','Boy','2013-04-15'],['Ananya Singh','2','ADM002','Girl','2013-08-21']]},'JNV_Class_Roster_Template')}
+function reportDialog(type){document.getElementById('rType').value=type;document.getElementById('rSchoolName').value=state.settings.schoolName||'';document.getElementById('rTeacherName').value=state.settings.classTeacher||'';document.getElementById('rSession').value=state.settings.session||'';document.getElementById('rAddress').value=state.settings.address||'';let school=type==='school'||type==='complete';document.getElementById('rClassWrap').style.display=school?'none':'flex';document.getElementById('rSectionWrap').style.display=school?'none':'flex';document.getElementById('rExamWrap').style.display=type==='complete'?'none':'flex';document.getElementById('rSubjectWrap').style.display=type==='subject'?'flex':'none';document.getElementById('rStatusWrap').style.display=type==='status'?'flex':'none';document.getElementById('pdfReportBtn').style.display=type==='complete'?'none':'inline-flex';refreshReportSubjects();document.getElementById('reportModal').classList.add('open')}
+function reportMeta(){return{schoolName:clean(document.getElementById('rSchoolName').value),teacherName:clean(document.getElementById('rTeacherName').value),session:clean(document.getElementById('rSession').value),address:clean(document.getElementById('rAddress').value),className:document.getElementById('rClass').value,section:document.getElementById('rSection').value,exam:document.getElementById('rExam').value}}
+function reportRows(){let type=document.getElementById('rType').value,rows=filtered(document.getElementById('rExam').value,document.getElementById('rClass').value,document.getElementById('rSection').value);if(type==='status'&&document.getElementById('rStatus').value!=='All')rows=rows.filter(r=>calc(r).status===document.getElementById('rStatus').value);return rows}
+function safe(v){return clean(v||'Report').replace(/[^a-z0-9_-]+/gi,'_').replace(/^_+|_+$/g,'').slice(0,120)||'Report'}
+function validateMeta(m){if(!m.schoolName)return toast('Enter school name before download'),false;if(!m.teacherName)return toast('Enter class teacher name before download'),false;state.settings.schoolName=m.schoolName;state.settings.classTeacher=m.teacherName;if(m.session)state.settings.session=m.session;if(m.address)state.settings.address=m.address;persist();return true}
+function reportData(){let type=document.getElementById('rType').value,rows=reportRows(),cl=document.getElementById('rClass').value,sub=document.getElementById('rSubject').value,subs=cl?classSubjects(cl):allSubjects(),title='',head=[],body=[];if(type==='subject'){title=`${sub} Subject Result`;head=['Roll No','Admission No','Student','Class','Section','Marks','Maximum','Percentage','Status'];rows.forEach(r=>{let m=r.marks?.[sub];if(validMark(m))body.push([r.rollNo,r.admissionNo,r.name,r.className,r.section,m.score,m.max,(m.score/m.max*100).toFixed(2),m.score>=m.max*state.settings.subjectPassPercentage/100?'Pass':'Fail'])})}else if(type==='school'){title='School Topper Report';head=['Category','Class / Subject','Rank','Student','Roll No','Section','Percentage'];let exam=document.getElementById('rExam').value,all=filtered(exam);uniq(all.map(r=>r.className)).forEach(c=>ranks(all.filter(r=>r.className===c)).slice(0,3).forEach(r=>body.push(['Class Topper',c,r._rank,r.name,r.rollNo,r.section,calc(r).pct.toFixed(2)])));allSubjects().forEach(s=>{let a=all.filter(r=>validMark(r.marks?.[s])).sort((x,y)=>y.marks[s].score/y.marks[s].max-x.marks[s].score/x.marks[s].max)[0];if(a)body.push(['Subject Topper',s,'1',a.name,a.rollNo,a.section,(a.marks[s].score/a.marks[s].max*100).toFixed(2)])})}else{title=type==='cards'?'Student Report Cards':type==='status'?'Pass Fail Incomplete Report':'Class Result Sheet';head=['Rank','Roll No','Admission No','Student','Class','Section',...subs,'Total','Percentage','Grade','Status','Failed Subjects','Missing Subjects'];let rm=new Map(ranks(rows).map(r=>[r.id,r._rank]));rows.sort((a,b)=>(rm.get(a.id)||9999)-(rm.get(b.id)||9999)||clean(a.name).localeCompare(clean(b.name))).forEach(r=>{let c=calc(r);body.push([rm.get(r.id)||'',r.rollNo,r.admissionNo,r.name,r.className,r.section,...subs.map(s=>validMark(r.marks?.[s])?`${r.marks[s].score}/${r.marks[s].max}`:'—'),`${c.obtained}/${c.maximum}`,c.pct.toFixed(2),c.grade,c.status,c.failed.join(', '),c.missing.join(', ')])})}return{type,title,head,body,rows,subs}}
+function generateReport(format){let meta=reportMeta();if(!validateMeta(meta))return;let type=document.getElementById('rType').value;if(type==='complete'){exportCompleteExcel(meta);closeModal('reportModal');return}let d=reportData();if(!d.body.length)return toast('No data for selected filters');if(format==='xlsx'){let info=[[meta.schoolName],[meta.address],[d.title],[`Session: ${meta.session||'-'} | Class Teacher: ${meta.teacherName}`],[],d.head,...d.body];workbookDownload({[d.title]:info},safe(meta.schoolName+'_'+d.title));closeModal('reportModal');toast('Excel report downloaded');return}let {jsPDF}=window.jspdf,landscape=d.type!=='cards'&&d.head.length>9,doc=new jsPDF({orientation:landscape?'landscape':'portrait'});let header=(title)=>{let w=doc.internal.pageSize.getWidth();doc.setFont('helvetica','bold');doc.setFontSize(17);doc.text(meta.schoolName,w/2,13,{align:'center'});doc.setFont('helvetica','normal');doc.setFontSize(8);if(meta.address)doc.text(meta.address,w/2,18,{align:'center'});doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(title,w/2,25,{align:'center'});doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.text(`Session: ${meta.session||'-'} | Class Teacher: ${meta.teacherName}`,w/2,31,{align:'center'})};let footer=()=>{let pages=doc.internal.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);let w=doc.internal.pageSize.getWidth(),h=doc.internal.pageSize.getHeight();doc.setFontSize(7);doc.text(`JNV Result Studio | Page ${i} of ${pages}`,w/2,h-7,{align:'center'})}};if(type==='cards'){d.rows.forEach((r,i)=>{if(i)doc.addPage();let c=calc(r),rank=ranks(filtered(r.exam,r.className,r.section)).find(x=>x.id===r.id)?._rank||'—';header('STUDENT REPORT CARD');doc.setFontSize(9.5);doc.text(`Student: ${r.name}`,14,43);doc.text(`Roll No: ${r.rollNo||'—'}`,14,49);doc.text(`Admission No: ${r.admissionNo||'—'}`,14,55);doc.text(`Class: ${r.className}-${r.section}`,115,43);doc.text(`Exam: ${r.exam}`,115,49);doc.text(`Rank: ${rank}`,115,55);let b=classSubjects(r.className).map(s=>{let m=r.marks?.[s];return[s,validMark(m)?m.score:'—',validMark(m)?m.max:'—',validMark(m)?(m.score/m.max*100).toFixed(2)+'%':'—',validMark(m)?(m.score>=m.max*state.settings.subjectPassPercentage/100?'Pass':'Fail'):'Missing']});doc.autoTable({startY:62,head:[['Subject','Obtained','Maximum','Percentage','Status']],body:b,theme:'grid',headStyles:{fillColor:[124,58,237],textColor:[255,255,255]},alternateRowStyles:{fillColor:[239,246,255]},styles:{fontSize:8.5,cellPadding:2.7},columnStyles:{4:{fontStyle:'bold'}}});let y=doc.lastAutoTable.finalY+9;doc.setFillColor(239,246,255);doc.roundedRect(14,y-6,182,22,3,3,'F');doc.setTextColor(11,31,75);doc.setFont('helvetica','bold');doc.text(`Total: ${c.obtained}/${c.maximum}`,19,y+2);doc.text(`Percentage: ${c.pct.toFixed(2)}%`,65,y+2);doc.text(`Grade: ${c.grade}`,130,y+2);doc.setTextColor(c.status==='Pass'?5:190,c.status==='Pass'?120:18,c.status==='Pass'?105:60);doc.text(`Result: ${c.status}`,164,y+2);doc.setTextColor(23,32,51);doc.setFont('helvetica','normal');let remark=c.status==='Pass'?(c.pct>=75?'Excellent performance. Keep progressing with confidence.':'Good effort. Continue regular practice for further improvement.'):(c.status==='Incomplete'?'Result is incomplete because some subject marks are missing.':'Needs focused support and regular subject-wise practice.');doc.text(`Teacher's Remark: ${remark}`,19,y+11,{maxWidth:170});if(c.missing.length)doc.text(`Missing Subjects: ${c.missing.join(', ')}`,14,y+23);doc.line(15,264,53,264);doc.line(155,264,195,264);doc.text(meta.teacherName,34,270,{align:'center'});doc.text(state.settings.principal||'Principal',175,270,{align:'center'});doc.setFontSize(8);doc.text('Class Teacher',34,276,{align:'center'});doc.text('Principal',175,276,{align:'center'})})}else{header(d.title);doc.autoTable({startY:37,head:[d.head],body:d.body,theme:'grid',headStyles:{fillColor:[37,99,235]},alternateRowStyles:{fillColor:[245,247,255]},styles:{fontSize:landscape?6.1:8,cellPadding:2,overflow:'linebreak'}})}footer();doc.save(safe(meta.schoolName+'_'+d.title)+'.pdf');closeModal('reportModal');toast('PDF report downloaded')}
+function exportCompleteExcel(meta={}){let rows=state.records,subs=allSubjects(),master=[['Roll No','Admission No','Student','Class','Section','Exam','Class Teacher',...subs,'Total','Maximum','Percentage','Grade','Status','Failed Subjects','Missing Subjects']];rows.forEach(r=>{let c=calc(r);master.push([r.rollNo,r.admissionNo,r.name,r.className,r.section,r.exam,r.classTeacher||'',...subs.map(s=>validMark(r.marks?.[s])?`${r.marks[s].score}/${r.marks[s].max}`:''),c.obtained,c.maximum,c.pct.toFixed(2),c.grade,c.status,c.failed.join(', '),c.missing.join(', ')])});let sheets={'Master Result':[[meta.schoolName||state.settings.schoolName],[meta.address||state.settings.address],[`Academic Session: ${meta.session||state.settings.session}`],[],...master]};for(let cl of CLASSES){let rr=rows.filter(r=>r.className===cl);if(!rr.length)continue;let ss=classSubjects(cl),h=[['Rank','Roll','Admission No','Student','Section','Exam',...ss,'Total','%','Grade','Status']],rm=new Map(ranks(rr).map(r=>[r.id,r._rank]));rr.forEach(r=>{let c=calc(r);h.push([rm.get(r.id)||'',r.rollNo,r.admissionNo,r.name,r.section,r.exam,...ss.map(s=>validMark(r.marks?.[s])?`${r.marks[s].score}/${r.marks[s].max}`:''),`${c.obtained}/${c.maximum}`,c.pct.toFixed(2),c.grade,c.status])});sheets['Class '+cl]=h}workbookDownload(sheets,safe((meta.schoolName||state.settings.schoolName)+'_Complete_Result'));toast('Complete Excel workbook downloaded')}
+function exportJSON(){let blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='JNV_Result_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+async function restoreJSON(file){try{let x=JSON.parse(await file.text());state=normalizeState(x);persist();renderAll();toast('Backup restored')}catch(e){toast('Invalid backup file')}}
+function loadSettings(){document.getElementById('sName').value=state.settings.schoolName||'';document.getElementById('sSession').value=state.settings.session||'';document.getElementById('sPass').value=state.settings.passPercentage;document.getElementById('sSubjectPass').value=state.settings.subjectPassPercentage;document.getElementById('sPrincipal').value=state.settings.principal||'';document.getElementById('sAddress').value=state.settings.address||''}
+function saveSettings(){let op=n(document.getElementById('sPass').value),sp=n(document.getElementById('sSubjectPass').value);if(!Number.isFinite(op)||op<0||op>100||!Number.isFinite(sp)||sp<0||sp>100)return toast('Pass percentages must be between 0 and 100');state.settings={...state.settings,schoolName:clean(document.getElementById('sName').value)||'Jawahar Navodaya Vidyalaya',session:clean(document.getElementById('sSession').value),passPercentage:op,subjectPassPercentage:sp,principal:clean(document.getElementById('sPrincipal').value),address:clean(document.getElementById('sAddress').value)};persist();renderAll();toast('Settings saved')}
+function resetData(){if(confirm('Permanently delete all saved students, marks and roster data?')){state.records=[];state.roster=[];persist();renderAll();toast('All result data deleted')}}
+let drop=document.getElementById('drop');['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>importAllSubjectExcel(e.dataTransfer.files[0]));
+renderAll();
+</script>
+<script>
+const EXAM_PATTERN={
+ '6-8':[{name:'UT-1',max:25,type:'ut'},{name:'UT-2',max:25,type:'ut'},{name:'Half-Yearly',max:80,type:'term'},{name:'UT-3',max:25,type:'ut'},{name:'UT-4',max:25,type:'ut'},{name:'Annual Exam',max:80,type:'term'}],
+ '9-10':[{name:'UT-1',max:30,type:'ut'},{name:'UT-2',max:30,type:'ut'},{name:'Half-Yearly',max:80,type:'term'},{name:'UT-3',max:30,type:'ut'},{name:'Pre-Board',max:80,type:'theory'},{name:'Annual / Board',max:80,type:'term'}],
+ '11-12':[{name:'UT-1',max:30,type:'ut'},{name:'UT-2',max:30,type:'ut'},{name:'Half-Yearly',max:100,type:'seniorTerm'},{name:'UT-3',max:30,type:'ut'},{name:'Pre-Board',max:100,type:'seniorTerm'},{name:'Annual / Board',max:100,type:'seniorTerm'}]
+};
+function classBand(cl){cl=Number(cl);return cl<=8?'6-8':cl<=10?'9-10':'11-12'}
+function examPattern(cl,exam){return (EXAM_PATTERN[classBand(cl)]||[]).find(x=>norm(x.name)===norm(exam))||{name:exam,max:Number(document.getElementById('uMax')?.value)||100,type:'custom'}}
+function examTypesForClass(cl){return (EXAM_PATTERN[classBand(cl)]||[]).map(x=>x.name)}
+function updateExamUploadMode(){let cl=document.getElementById('uClass').value||'6',exam=document.getElementById('uExam').value,p=examPattern(cl,exam),max=document.getElementById('uMax');if(max)max.value=p.max;let help=document.querySelector('#import .help');if(help){let text=p.type==='term'?'Template will include Theory, Best/Periodic Test, Notebook, Subject Enrichment and Multiple Assessment columns. Final = Theory 80 + Internal 20.':p.type==='seniorTerm'?'For every subject, enter Theory Marks, Theory Maximum (70 or 80), and Practical/Internal Marks. The remaining component is calculated automatically so the final subject total is out of 100.':`Each subject is uploaded out of ${p.max} marks.`;help.innerHTML=`<b>${esc(exam||'Selected exam')} format:</b> ${text}<br><b>Student identity:</b> Student Name plus Roll No or Admission No is required.<br>Totals, percentage, grade, result and rank are calculated automatically.`}}
+function refreshUploadSubjects(){let cl=document.getElementById('uClass').value||'6';options('uSubject',classSubjects(cl),false);let ex=document.getElementById('uExam'),old=ex?.value;if(ex){ex.innerHTML=examTypesForClass(cl).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');if([...ex.options].some(o=>o.value===old))ex.value=old}updateExamUploadMode()}
+function seniorDefaultTheoryMax(subject){let x=norm(subject);return /(physics|chemistry|biology|biotechnology|computerscience|informaticspractices|physicaleducation|geography|psychology|homescience)/.test(x)?70:80}
+function bestUTRaw(rec,subject,maxRaw){let allowed=classBand(rec.className)==='6-8'?['UT-1','UT-2','UT-3','UT-4']:['UT-1','UT-2','UT-3'];let candidates=state.records.filter(r=>r.className===rec.className&&norm(r.section)===norm(rec.section)&&((rec.admissionNo&&norm(r.admissionNo)===norm(rec.admissionNo))||(rec.rollNo&&norm(r.rollNo)===norm(rec.rollNo)))&&allowed.some(x=>norm(x)===norm(r.exam))).map(r=>r.marks?.[subject]).filter(validMark);if(Number.isFinite(maxRaw))candidates.push({score:maxRaw,max:classBand(rec.className)==='6-8'?25:30});if(!candidates.length)return NaN;return Math.max(...candidates.map(m=>n(m.score)/n(m.max)*(classBand(rec.className)==='6-8'?25:30)))}
+function componentNumber(row,headerMap,names){for(let name of names){let h=headerMap.get(norm(name));if(h&&clean(row[h])!==''){let v=n(row[h]);if(Number.isFinite(v))return v}}return NaN}
+async function importAllSubjectExcel(file){if(!file)return;let cl=document.getElementById('uClass').value,section=clean(document.getElementById('uSection').value).toUpperCase(),exam=clean(document.getElementById('uExam').value),teacher=clean(document.getElementById('uTeacher').value),subjects=classSubjects(cl),pat=examPattern(cl,exam);if(!cl||!section||!exam)return toast('Select class, section and exam first');try{let wb=await readWorkbook(file),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});if(!rows.length)throw Error('The sheet is empty');let headers=Object.keys(rows[0]),headerMap=new Map(headers.map(h=>[norm(h),h])),added=0,updated=0,errors=[],cells=0;for(let [i,row] of rows.entries()){let line=i+2,name=clean(rowValue(row,['studentname','name','student'])),roll=clean(rowValue(row,['rollno','rollnumber','roll'])),adm=clean(rowValue(row,['admissionno','admissionnumber','admno'])),gender=clean(rowValue(row,['gender','sex'])),dob=clean(rowValue(row,['dateofbirth','dob']));if(!name||(!roll&&!adm)){errors.push(`Row ${line}: name and roll/admission number required`);continue}let candidates=state.records.filter(r=>r.className===cl&&norm(r.section)===norm(section)&&norm(r.exam)===norm(exam)),rec=(adm&&candidates.find(r=>norm(r.admissionNo)===norm(adm)))||(roll&&candidates.find(r=>norm(r.rollNo)===norm(roll)));if(!rec){rec={id:crypto.randomUUID(),name,rollNo:roll,admissionNo:adm,className:cl,section,exam,classTeacher:teacher,gender,dob,marks:{}};state.records.push(rec);added++}else updated++;Object.assign(rec,{name,rollNo:roll||rec.rollNo,admissionNo:adm||rec.admissionNo,classTeacher:teacher||rec.classTeacher,gender:gender||rec.gender,dob:dob||rec.dob});for(let subject of subjects){let mark=null,details={};if(pat.type==='term'){let theory=componentNumber(row,headerMap,[subject+' Theory',subject]);if(!Number.isFinite(theory))continue;let rawUT=componentNumber(row,headerMap,[subject+' Best UT',subject+' Periodic Test']);let best=bestUTRaw(rec,subject,rawUT),converted=Number.isFinite(best)?best*5/(classBand(cl)==='6-8'?25:30):0,notebook=componentNumber(row,headerMap,[subject+' Notebook']),enrich=componentNumber(row,headerMap,[subject+' Subject Enrichment']),multiple=componentNumber(row,headerMap,[subject+' Multiple Assessment']);notebook=Number.isFinite(notebook)?notebook:0;enrich=Number.isFinite(enrich)?enrich:0;multiple=Number.isFinite(multiple)?multiple:0;if(theory<0||theory>80||[notebook,enrich,multiple].some(x=>x<0||x>5)){errors.push(`Row ${line}: invalid ${subject} component marks`);continue}let internal=Math.min(20,converted+notebook+enrich+multiple);mark={score:+(theory+internal).toFixed(2),max:100,details:{theory,theoryMax:80,bestUT:best,convertedUT:+converted.toFixed(2),notebook,enrichment:enrich,multiple,internal:+internal.toFixed(2)}}}else if(pat.type==='seniorTerm'){let theory=componentNumber(row,headerMap,[subject+' Theory',subject]),theoryMax=componentNumber(row,headerMap,[subject+' Theory Max',subject+' Maximum Marks',subject+' Max']),component=componentNumber(row,headerMap,[subject+' Practical / Internal',subject+' Practical',subject+' Internal']);if(!Number.isFinite(theory))continue;if(!Number.isFinite(theoryMax))theoryMax=seniorDefaultTheoryMax(subject);let componentMax=100-theoryMax;component=Number.isFinite(component)?component:0;if(![70,80,100].includes(theoryMax)||theory<0||theory>theoryMax||component<0||component>componentMax){errors.push(`Row ${line}: invalid ${subject} marks. Theory maximum must be 70, 80 or 100; component maximum is ${componentMax}.`);continue}mark={score:+(theory+component).toFixed(2),max:100,details:{theory,theoryMax,component,componentMax,componentLabel:componentMax===30?'Practical':'Internal Assessment'}}}else{let h=headerMap.get(norm(subject));if(!h||clean(row[h])==='')continue;mark=parseFlexibleMark(row[h],pat.max);if(mark?.error){errors.push(`Row ${line}: invalid ${subject} marks`);continue}}rec.marks[subject]=mark;cells++}}persist();renderAll();document.getElementById('importPreview').innerHTML=`<div class="${errors.length?'error-box':'success-box'}"><b>${esc(exam)} upload completed:</b> ${added} new students, ${updated} updated and ${cells} subject results calculated.${errors.length?`<div class="validation-list"><b>Validation notes:</b><br>${errors.map(esc).join('<br>')}</div>`:''}</div>`;toast(`${added+updated} students processed`)}catch(e){document.getElementById('importPreview').innerHTML=`<div class="error-box"><b>Upload failed:</b> ${esc(e.message)}</div>`}}
+function downloadAllSubjectTemplate(){let cl=document.getElementById('uClass')?.value||'6',exam=document.getElementById('uExam')?.value||examTypesForClass(cl)[0],pat=examPattern(cl,exam),subjects=classSubjects(cl),base=['Student Name','Roll No','Admission No','Gender','Date of Birth'],header=[...base];if(pat.type==='term')subjects.forEach(s=>header.push(`${s} Theory`,`${s} Best UT`,`${s} Notebook`,`${s} Subject Enrichment`,`${s} Multiple Assessment`));else if(pat.type==='seniorTerm')subjects.forEach(s=>header.push(`${s} Theory`,`${s} Theory Max`,`${s} Practical / Internal`));else header.push(...subjects);let sample=['Aarav Sharma','1','ADM001','Boy','2013-04-15'];if(pat.type==='term')subjects.forEach(()=>sample.push(68,classBand(cl)==='6-8'?22:26,5,4,5));else if(pat.type==='seniorTerm')subjects.forEach(s=>{let tm=seniorDefaultTheoryMax(s);sample.push(Math.round(tm*.82),tm,Math.round((100-tm)*.86))});else subjects.forEach(()=>sample.push(Math.round(pat.max*.78)));let instructions=[['CLASS-WISE EXAM UPLOAD TEMPLATE'],[`Class: ${cl}`],[`Exam: ${exam}`],[`Exam maximum: ${pat.max}`],['Do not change column headings.'],['For term exams, Best UT is automatically compared with already uploaded UT records; the higher available score is used.'],['Internal conversion: Best/Periodic Test × 5 ÷ UT maximum.'],['Classes 11–12: set each subject Theory Max to 70 or 80. The Practical / Internal maximum becomes 30 or 20 automatically. Use Theory Max 100 for a full theory paper with no component.'],['Final grades: A1 91–100, A2 81–90, B1 71–80, B2 61–70, C1 51–60, C2 41–50, D 33–40, E below 33.']];workbookDownload({[`Class ${cl} ${exam}`]:[header,sample],Instructions:instructions},safe(`JNV_Class_${cl}_${exam}_Marks_Template`))}
+// Enrich report cards with component breakup when available.
+const _oldGenerateReport=generateReport;
+refreshUploadSubjects();renderAll();
+</script>
+
+<script>
+/* ===== JNV Result Studio V4 enhancements: editable profile data, dynamic exam scheme,
+   optional extra subjects, richer report cards, and local-storage persistence ===== */
+const DEFAULT_EXAMS_V4={
+ '6':[
+  {name:'UT-1',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'Half-Yearly',max:100,theoryMax:80,componentMax:20,type:'term'},
+  {name:'UT-2',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'UT-3',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'UT-4',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'Annual Exam',max:100,theoryMax:80,componentMax:20,type:'term'}
+ ],
+ '7':[
+  {name:'UT-1',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'Half-Yearly',max:100,theoryMax:80,componentMax:20,type:'term'},
+  {name:'UT-2',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'UT-3',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'UT-4',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'Annual Exam',max:100,theoryMax:80,componentMax:20,type:'term'}
+ ],
+ '8':[
+  {name:'UT-1',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'Half-Yearly',max:100,theoryMax:80,componentMax:20,type:'term'},
+  {name:'UT-2',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'UT-3',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'UT-4',max:25,theoryMax:25,componentMax:0,type:'ut'},
+  {name:'Annual Exam',max:100,theoryMax:80,componentMax:20,type:'term'}
+ ],
+ '9':[
+  {name:'UT-1',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'Half-Yearly',max:100,theoryMax:80,componentMax:20,type:'term'},
+  {name:'UT-2',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'UT-3',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'Pre-Board',max:80,theoryMax:80,componentMax:0,type:'theory'},
+  {name:'Annual / Board',max:100,theoryMax:80,componentMax:20,type:'term'}
+ ],
+ '10':[
+  {name:'UT-1',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'Half-Yearly',max:100,theoryMax:80,componentMax:20,type:'term'},
+  {name:'UT-2',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'UT-3',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'Pre-Board',max:80,theoryMax:80,componentMax:0,type:'theory'},
+  {name:'Annual / Board',max:100,theoryMax:80,componentMax:20,type:'term'}
+ ],
+ '11':[
+  {name:'UT-1',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'Half-Yearly',max:100,theoryMax:70,componentMax:30,type:'seniorTerm'},
+  {name:'UT-2',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'UT-3',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'Pre-Board',max:100,theoryMax:70,componentMax:30,type:'seniorTerm'},
+  {name:'Annual / Board',max:100,theoryMax:70,componentMax:30,type:'seniorTerm'}
+ ],
+ '12':[
+  {name:'UT-1',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'Half-Yearly',max:100,theoryMax:70,componentMax:30,type:'seniorTerm'},
+  {name:'UT-2',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'UT-3',max:30,theoryMax:30,componentMax:0,type:'ut'},
+  {name:'Pre-Board',max:100,theoryMax:70,componentMax:30,type:'seniorTerm'},
+  {name:'Annual / Board',max:100,theoryMax:70,componentMax:30,type:'seniorTerm'}
+ ]
+};
+
+function cloneExamConfigV4(){
+ let out={}; for(let cl of CLASSES)out[cl]=clone(DEFAULT_EXAMS_V4[cl]||[]); return out;
+}
+function ensureV4State(){
+ state.settings.examSettingsByClass=state.settings.examSettingsByClass||cloneExamConfigV4();
+ for(let cl of CLASSES){
+  if(!Array.isArray(state.settings.examSettingsByClass[cl])||!state.settings.examSettingsByClass[cl].length)
+   state.settings.examSettingsByClass[cl]=clone(DEFAULT_EXAMS_V4[cl]||[]);
+  state.settings.examSettingsByClass[cl]=state.settings.examSettingsByClass[cl].map(x=>({
+   name:clean(x.name)||'Exam',
+   max:Number(x.max)>0?Number(x.max):100,
+   theoryMax:Number(x.theoryMax)>=0?Number(x.theoryMax):Number(x.max)||100,
+   componentMax:Number(x.componentMax)>=0?Number(x.componentMax):Math.max(0,(Number(x.max)||100)-(Number(x.theoryMax)||0)),
+   type:['ut','term','seniorTerm','theory','custom'].includes(x.type)?x.type:'custom'
+  }));
+ }
+ if(norm(state.settings.schoolName||'')===norm('Jawahar Navodaya Vidyalaya')) state.settings.schoolName='Jawahar Navodaya Vidyalaya Sharfabad, Baghpat';
+ if(!clean(state.settings.address||'')) state.settings.address='Village Sharfabad, Post Phulera, District Baghpat, Uttar Pradesh';
+ state.settings.vicePrincipal=clean(state.settings.vicePrincipal||'');
+ state.settings.schoolCode=clean(state.settings.schoolCode||'');
+ state.settings.affiliationNo=clean(state.settings.affiliationNo||'');
+ state.settings.classTeacher=clean(state.settings.classTeacher||'');
+ state.records.forEach(r=>{
+  r.fatherName=clean(r.fatherName||'');
+  r.motherName=clean(r.motherName||'');
+  r.house=clean(r.house||'');
+  r.guardianName=clean(r.guardianName||'');
+  r.extraSubjects=Array.isArray(r.extraSubjects)?r.extraSubjects:[];
+ });
+ persist();
+}
+
+function installV4UI(){
+ let pattern=document.getElementById('pattern');
+ if(pattern)pattern.innerHTML=`
+  <div class="page-title"><div><h2>School Exam Settings</h2><p>Edit examination names and maximum marks class-by-class. These values are saved in this browser and used by upload templates, manual entry and report cards.</p></div></div>
+  <div class="card">
+   <div class="filters">
+    <div class="field"><label>Class</label><select id="pClass" onchange="renderExamSettings()">${CLASSES.map(c=>`<option value="${c}">Class ${c}</option>`).join('')}</select></div>
+   </div>
+   <div class="help"><b>JNV/CBSE-style configurable model:</b> the included values are only a starting model. Your school can edit every examination total, theory component and internal/practical component before entering marks. For Term (4-part IA), the internal component is split into four equal parts for calculation.</div>
+   <div class="table-wrap" style="margin-top:14px;max-height:none">
+    <table><thead><tr><th>Exam Name</th><th>Total Marks</th><th>Theory Marks</th><th>Internal / Practical</th><th>Calculation Type</th><th>Action</th></tr></thead><tbody id="examSettingsBody"></tbody></table>
+   </div>
+   <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px">
+    <button class="btn btn-outline" onclick="addExamSetting()">+ Add Exam Type</button>
+    <button class="btn btn-primary" onclick="saveExamSettings()">Save Exam Settings</button>
+    <button class="btn btn-outline" onclick="resetExamSettingsForClass()">Restore Model for This Class</button>
+   </div>
+  </div>
+  <div class="card" style="margin-top:17px">
+   <h3>Grade & Result Rules</h3>
+   <p class="muted">Overall and subject pass percentages remain editable in School Settings. Grade scale used by this file: A1 91-100, A2 81-90, B1 71-80, B2 61-70, C1 51-60, C2 41-50, D 33-40, E below 33.</p>
+  </div>`;
+
+ let navBtn=document.querySelector('.nav button[data-page="pattern"]');
+ if(navBtn)navBtn.innerHTML='🗓 Exam Settings';
+
+ let settingsGrid=document.querySelector('#settings .form-grid');
+ if(settingsGrid && !document.getElementById('sVicePrincipal')){
+  settingsGrid.insertAdjacentHTML('beforeend',`
+   <div class="field"><label>Vice Principal Name</label><input id="sVicePrincipal"></div>
+   <div class="field"><label>Default Class Teacher</label><input id="sClassTeacher"></div>
+   <div class="field"><label>School Code</label><input id="sSchoolCode"></div>
+   <div class="field"><label>CBSE Affiliation No.</label><input id="sAffiliationNo"></div>`);
+ }
+
+ let modalGrid=document.querySelector('#studentModal .form-grid');
+ if(modalGrid && !document.getElementById('mFather')){
+  modalGrid.insertAdjacentHTML('beforeend',`
+   <div class="field"><label>Father's Name</label><input id="mFather"></div>
+   <div class="field"><label>Mother's Name</label><input id="mMother"></div>
+   <div class="field"><label>House</label><input id="mHouse" placeholder="House name"></div>
+   <div class="field"><label>Parent / Guardian</label><input id="mGuardian"></div>`);
+ }
+ let examEl=document.getElementById('mExam');
+ if(examEl && examEl.tagName!=='SELECT') examEl.outerHTML='<select id="mExam" onchange="renderMarkInputs()"></select>';
+
+ let markHost=document.getElementById('markInputs');
+ if(markHost && !document.getElementById('extraSubjectEditor')){
+  markHost.insertAdjacentHTML('afterend',`
+   <div id="extraSubjectEditor" style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+     <div><b>Additional / Extra Subjects</b><div class="muted" style="font-size:12px">Optional per student. Tick "Include in total" only when your school wants that subject counted in total and percentage.</div></div>
+     <button class="btn btn-outline" type="button" onclick="addExtraSubjectRow()">+ Add Extra Subject</button>
+    </div>
+    <div id="extraSubjectRows" class="subject-grid" style="margin-top:10px"></div>
+   </div>`);
+ }
+
+ let reportCard=document.querySelector('#reports .card:nth-of-type(5) p');
+ if(reportCard)reportCard.textContent='Printable student-wise report cards with profile details, regular and extra subjects, result summary and four signature blocks.';
+
+ let note=document.querySelector('.side-note');
+ if(note)note.innerHTML='<b>Editable & locally saved</b><br>Every student record can be corrected after upload. Student profile, marks, extra subjects, exam settings and school settings are saved in browser local storage.';
+}
+
+function schoolExamConfig(cl){return state.settings.examSettingsByClass?.[normalizeClass(cl)]||[]}
+function examTypesForClass(cl){return schoolExamConfig(cl).map(x=>x.name)}
+function examPattern(cl,exam){
+ let found=schoolExamConfig(cl).find(x=>norm(x.name)===norm(exam));
+ if(found)return {...found};
+ let fallback=Number(document.getElementById('uMax')?.value)||100;
+ return{name:clean(exam)||'Custom Exam',max:fallback,theoryMax:fallback,componentMax:0,type:'custom'};
+}
+function renderExamSettings(){
+ let cl=document.getElementById('pClass')?.value||'6',body=document.getElementById('examSettingsBody'); if(!body)return;
+ let arr=schoolExamConfig(cl);
+ body.innerHTML=arr.map((x,i)=>`<tr data-exam-index="${i}">
+  <td><input class="exam-name" value="${esc(x.name)}" style="min-width:145px;border:1px solid var(--line);border-radius:8px;padding:8px"></td>
+  <td><input class="exam-max" type="number" min="1" step="0.01" value="${x.max}" style="width:95px;border:1px solid var(--line);border-radius:8px;padding:8px"></td>
+  <td><input class="exam-theory" type="number" min="0" step="0.01" value="${x.theoryMax}" style="width:95px;border:1px solid var(--line);border-radius:8px;padding:8px"></td>
+  <td><input class="exam-component" type="number" min="0" step="0.01" value="${x.componentMax}" style="width:105px;border:1px solid var(--line);border-radius:8px;padding:8px"></td>
+  <td><select class="exam-type" style="min-width:155px;border:1px solid var(--line);border-radius:8px;padding:8px">
+   <option value="ut" ${x.type==='ut'?'selected':''}>Unit Test / Direct</option>
+   <option value="term" ${x.type==='term'?'selected':''}>Term + 4-part IA</option>
+   <option value="seniorTerm" ${x.type==='seniorTerm'?'selected':''}>Theory + Practical/Internal</option>
+   <option value="theory" ${x.type==='theory'?'selected':''}>Theory Only</option>
+   <option value="custom" ${x.type==='custom'?'selected':''}>Custom Direct</option>
+  </select></td>
+  <td><button class="btn btn-danger" style="padding:6px 9px" onclick="removeExamSetting(${i})">Delete</button></td>
+ </tr>`).join('');
+}
+function collectExamSettingsFromUI(){
+ let out=[]; document.querySelectorAll('#examSettingsBody tr').forEach(tr=>{
+  out.push({
+   name:clean(tr.querySelector('.exam-name').value),
+   max:n(tr.querySelector('.exam-max').value),
+   theoryMax:n(tr.querySelector('.exam-theory').value),
+   componentMax:n(tr.querySelector('.exam-component').value),
+   type:tr.querySelector('.exam-type').value
+  });
+ }); return out;
+}
+function validateExamRows(arr){
+ if(!arr.length)return 'Add at least one exam type.';
+ let names=new Set();
+ for(let x of arr){
+  if(!x.name)return 'Every exam must have a name.';
+  let k=norm(x.name); if(names.has(k))return `Duplicate exam name: ${x.name}`; names.add(k);
+  if(!Number.isFinite(x.max)||x.max<=0)return `${x.name}: total marks must be greater than 0.`;
+  if(!Number.isFinite(x.theoryMax)||x.theoryMax<0||x.theoryMax>x.max)return `${x.name}: theory marks must be between 0 and total marks.`;
+  if(!Number.isFinite(x.componentMax)||x.componentMax<0||x.componentMax>x.max)return `${x.name}: internal/practical marks must be between 0 and total marks.`;
+  if(['term','seniorTerm'].includes(x.type) && Math.abs((x.theoryMax+x.componentMax)-x.max)>.001)
+   return `${x.name}: theory + internal/practical must equal total marks.`;
+ }
+ return '';
+}
+function saveExamSettings(){
+ let cl=document.getElementById('pClass')?.value||'6',arr=collectExamSettingsFromUI(),err=validateExamRows(arr);
+ if(err)return toast(err);
+ state.settings.examSettingsByClass[cl]=arr; persist(); refreshSelects(); renderExamSettings(); toast(`Class ${cl} exam settings saved locally`);
+}
+function addExamSetting(){
+ let cl=document.getElementById('pClass')?.value||'6',arr=collectExamSettingsFromUI();
+ arr.push({name:'New Exam',max:100,theoryMax:100,componentMax:0,type:'custom'});
+ state.settings.examSettingsByClass[cl]=arr; renderExamSettings();
+}
+function removeExamSetting(i){
+ let cl=document.getElementById('pClass')?.value||'6',arr=collectExamSettingsFromUI();
+ if(arr.length<=1)return toast('Keep at least one exam type');
+ arr.splice(i,1); state.settings.examSettingsByClass[cl]=arr; renderExamSettings();
+}
+function resetExamSettingsForClass(){
+ let cl=document.getElementById('pClass')?.value||'6';
+ if(!confirm(`Restore the starting exam model for Class ${cl}?`))return;
+ state.settings.examSettingsByClass[cl]=clone(DEFAULT_EXAMS_V4[cl]); persist(); renderExamSettings(); refreshSelects(); toast('Exam model restored');
+}
+
+function updateExamUploadMode(){
+ let cl=document.getElementById('uClass')?.value||'6',exam=document.getElementById('uExam')?.value||'',p=examPattern(cl,exam),max=document.getElementById('uMax');
+ if(max)max.value=p.max;
+ let help=document.querySelector('#import .help');
+ if(help){
+  let text='';
+  if(p.type==='term')text=`Final subject total is ${p.max}: Theory ${p.theoryMax} + Internal ${p.componentMax}. Internal is calculated from Best/Periodic Test, Notebook, Subject Enrichment and Multiple Assessment, each using one-fourth of the internal component.`;
+  else if(p.type==='seniorTerm')text=`Final subject total is ${p.max}. Default Theory = ${p.theoryMax} and Practical/Internal = ${p.componentMax}; the Excel template also allows a different theory maximum per subject.`;
+  else text=`Each configured subject is entered directly out of ${p.max} marks.`;
+  help.innerHTML=`<b>${esc(exam||'Selected exam')} format:</b> ${text}<br><b>Student identity:</b> Student Name plus Roll No or Admission No is required. Profile columns (father, mother, house, guardian) are also accepted.<br>Totals, percentage, grade, result and rank are recalculated automatically after every edit.`;
+ }
+}
+function refreshUploadSubjects(){
+ let cl=document.getElementById('uClass')?.value||'6'; options('uSubject',classSubjects(cl),false);
+ let ex=document.getElementById('uExam'),old=ex?.value;
+ if(ex){
+  let types=examTypesForClass(cl); ex.innerHTML=types.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  if([...ex.options].some(o=>o.value===old))ex.value=old;
+ }
+ updateExamUploadMode();
+}
+function refreshStudentExamOptions(preferred=''){
+ let cl=document.getElementById('mClass')?.value||'6',ex=document.getElementById('mExam'); if(!ex)return;
+ let old=preferred||ex.value,arr=examTypesForClass(cl);
+ if(old && !arr.some(x=>norm(x)===norm(old)))arr=[...arr,old];
+ ex.innerHTML=arr.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+ if(old)ex.value=old;
+ renderMarkInputs();
+}
+
+function renderMarkInputs(r=null){
+ let cl=document.getElementById('mClass')?.value||'6',exam=document.getElementById('mExam')?.value||examTypesForClass(cl)[0]||'',p=examPattern(cl,exam),old={};
+ document.querySelectorAll('#markInputs .subject-entry').forEach(x=>old[x.dataset.subject]={score:x.querySelector('.score')?.value,max:x.querySelector('.max')?.value});
+ document.getElementById('markInputs').innerHTML=classSubjects(cl).map(s=>{
+  let m=r?.marks?.[s]||old[s]||{};
+  return `<div class="subject-entry" data-subject="${esc(s)}"><b>${esc(s)}</b><div><input class="score" type="number" min="0" step="0.01" placeholder="Obtained" value="${m.score??''}"><input class="max" type="number" min="0.01" step="0.01" placeholder="Maximum" value="${m.max??p.max}"></div></div>`;
+ }).join('');
+}
+function renderExtraSubjectRows(items=[]){
+ let host=document.getElementById('extraSubjectRows'); if(!host)return; host.innerHTML='';
+ (items||[]).forEach(x=>addExtraSubjectRow(x));
+}
+function addExtraSubjectRow(item={}){
+ let host=document.getElementById('extraSubjectRows'); if(!host)return;
+ let div=document.createElement('div'); div.className='subject-entry extra-subject-row';
+ div.innerHTML=`<b>Additional Subject</b>
+  <div style="display:grid;grid-template-columns:1fr 90px 90px;gap:7px">
+   <input class="extra-name" placeholder="Subject name" value="${esc(item.name||'')}">
+   <input class="extra-score" type="number" min="0" step="0.01" placeholder="Marks" value="${item.score??''}">
+   <input class="extra-max" type="number" min="0.01" step="0.01" placeholder="Max" value="${item.max??100}">
+  </div>
+  <label style="display:flex;gap:7px;align-items:center;margin-top:8px;font-size:12px"><input class="extra-total" type="checkbox" ${item.includeInTotal?'checked':''}> Include in total / percentage</label>
+  <button type="button" class="btn btn-danger" style="padding:5px 8px;margin-top:8px" onclick="this.closest('.extra-subject-row').remove()">Remove</button>`;
+ host.appendChild(div);
+}
+function readExtraSubjectsFromModal(){
+ let out=[],bad=[];
+ document.querySelectorAll('.extra-subject-row').forEach((row,i)=>{
+  let name=clean(row.querySelector('.extra-name').value),score=n(row.querySelector('.extra-score').value),max=n(row.querySelector('.extra-max').value),includeInTotal=row.querySelector('.extra-total').checked;
+  if(!name && !Number.isFinite(score))return;
+  if(!name||!Number.isFinite(score)||!Number.isFinite(max)||max<=0||score<0||score>max)bad.push(`Extra subject ${i+1}`);
+  else out.push({name,score,max,includeInTotal});
+ });
+ return{out,bad};
+}
+
+function openStudentModal(r=null){
+ editingId=r?.id||null;
+ ['mName','mRoll','mAdm','mSection','mTeacher','mDob','mFather','mMother','mHouse','mGuardian'].forEach(id=>{let e=document.getElementById(id);if(e)e.value=''});
+ document.getElementById('mGender').value='';
+ document.getElementById('mClass').value=r?.className||'6';
+ if(r){
+  document.getElementById('mName').value=r.name||'';
+  document.getElementById('mRoll').value=r.rollNo||'';
+  document.getElementById('mAdm').value=r.admissionNo||'';
+  document.getElementById('mSection').value=r.section||'';
+  document.getElementById('mTeacher').value=r.classTeacher||'';
+  document.getElementById('mGender').value=r.gender||'';
+  document.getElementById('mDob').value=r.dob||'';
+  document.getElementById('mFather').value=r.fatherName||'';
+  document.getElementById('mMother').value=r.motherName||'';
+  document.getElementById('mHouse').value=r.house||'';
+  document.getElementById('mGuardian').value=r.guardianName||'';
+ }
+ refreshStudentExamOptions(r?.exam||examTypesForClass(r?.className||'6')[0]||'');
+ renderMarkInputs(r);
+ renderExtraSubjectRows(r?.extraSubjects||[]);
+ document.getElementById('studentModal').classList.add('open');
+}
+function saveStudent(){
+ let name=clean(document.getElementById('mName').value),roll=clean(document.getElementById('mRoll').value),adm=clean(document.getElementById('mAdm').value),cl=normalizeClass(document.getElementById('mClass').value),section=clean(document.getElementById('mSection').value).toUpperCase(),exam=clean(document.getElementById('mExam').value);
+ if(!name||!roll||!CLASSES.includes(cl)||!section||!exam)return toast('Complete name, roll, class, section and exam');
+ let duplicate=state.records.find(r=>r.id!==editingId&&r.className===cl&&norm(r.section)===norm(section)&&norm(r.exam)===norm(exam)&&(norm(r.rollNo)===norm(roll)||(adm&&norm(r.admissionNo)===norm(adm))));
+ if(duplicate)return toast('This roll/admission number already exists for the selected class and exam');
+ let marks={},bad=[];
+ document.querySelectorAll('#markInputs .subject-entry').forEach(x=>{
+  let s=x.dataset.subject,score=n(x.querySelector('.score').value),max=n(x.querySelector('.max').value);
+  if(Number.isFinite(score)||Number.isFinite(max)){
+   if(!Number.isFinite(score)||!Number.isFinite(max)||max<=0||score<0||score>max)bad.push(s);
+   else marks[s]={score,max};
+  }
+ });
+ let extra=readExtraSubjectsFromModal(); bad.push(...extra.bad);
+ if(bad.length)return toast('Invalid marks in: '+bad.join(', '));
+ let old=editingId?state.records.find(r=>r.id===editingId):null;
+ let rec={...(old||{}),id:editingId||crypto.randomUUID(),name,rollNo:roll,admissionNo:adm,className:cl,section,exam,
+  classTeacher:clean(document.getElementById('mTeacher').value),gender:document.getElementById('mGender').value,dob:document.getElementById('mDob').value,
+  fatherName:clean(document.getElementById('mFather').value),motherName:clean(document.getElementById('mMother').value),house:clean(document.getElementById('mHouse').value),
+  guardianName:clean(document.getElementById('mGuardian').value),marks,extraSubjects:extra.out};
+ if(editingId)state.records[state.records.findIndex(r=>r.id===editingId)]=rec; else state.records.push(rec);
+ persist(); closeModal('studentModal'); renderAll(); toast('Student data and marks saved locally');
+}
+
+function calc(r){
+ let required=classSubjects(r.className),present=Object.entries(r.marks||{}).filter(([,m])=>validMark(m)),
+ missing=required.filter(s=>!validMark(r.marks?.[s])),invalid=Object.entries(r.marks||{}).filter(([,m])=>!validMark(m)).map(([s])=>s);
+ let extras=(r.extraSubjects||[]).filter(x=>x.includeInTotal&&validMark(x));
+ let obtained=present.reduce((a,[,m])=>a+n(m.score),0)+extras.reduce((a,m)=>a+n(m.score),0);
+ let maximum=present.reduce((a,[,m])=>a+n(m.max),0)+extras.reduce((a,m)=>a+n(m.max),0);
+ let pct=maximum?obtained/maximum*100:0;
+ let failed=present.filter(([,m])=>n(m.score)<n(m.max)*state.settings.subjectPassPercentage/100).map(([s])=>s);
+ extras.filter(m=>n(m.score)<n(m.max)*state.settings.subjectPassPercentage/100).forEach(m=>failed.push('Extra: '+m.name));
+ let status=missing.length||invalid.length?'Incomplete':failed.length||pct<state.settings.passPercentage?'Fail':'Pass';
+ return{obtained:+obtained.toFixed(2),maximum:+maximum.toFixed(2),pct,missing,invalid,failed,status,grade:grade(pct,status),complete:status!=='Incomplete'};
+}
+
+function renderStudents(){
+ let q=norm(document.getElementById('search').value),cl=document.getElementById('fClass').value,sec=document.getElementById('fSection').value,ex=document.getElementById('fExam').value,st=document.getElementById('fResult').value,
+ rows=state.records.filter(r=>(!q||[r.name,r.rollNo,r.admissionNo,r.fatherName,r.motherName,r.house].some(x=>norm(x).includes(q)))&&(!cl||r.className===cl)&&(!sec||r.section===sec)&&(!ex||r.exam===ex)&&(!st||calc(r).status===st)),
+ subs=cl?classSubjects(cl):uniq(rows.flatMap(r=>Object.keys(r.marks||{})));
+ document.getElementById('studentHead').innerHTML='<tr><th>Roll</th><th>Student</th><th>House</th><th>Class</th><th>Section</th><th>Exam</th>'+subs.map(s=>`<th>${esc(s)}</th>`).join('')+'<th>Extra Subjects</th><th>Total</th><th>%</th><th>Grade</th><th>Status</th><th>Issues</th><th>Actions</th></tr>';
+ document.getElementById('studentBody').innerHTML=rows.length?rows.map(r=>{
+  let c=calc(r),issues=[...c.missing.map(x=>'Missing '+x),...c.invalid.map(x=>'Invalid '+x),...c.failed.map(x=>'Fail '+x)].join(', ');
+  let extra=(r.extraSubjects||[]).map(x=>`${x.name}: ${x.score}/${x.max}${x.includeInTotal?' *':''}`).join(' | ');
+  return `<tr><td>${esc(r.rollNo)}</td><td><b>${esc(r.name)}</b><br><small class="muted">${esc(r.admissionNo||'')} ${r.fatherName?`· F: ${esc(r.fatherName)}`:''}</small></td><td>${esc(r.house||'—')}</td><td>${esc(r.className)}</td><td>${esc(r.section)}</td><td>${esc(r.exam)}</td>${subs.map(s=>{let m=r.marks?.[s];return `<td>${validMark(m)?`${m.score}/${m.max}`:'—'}</td>`}).join('')}<td title="* = included in total">${esc(extra||'—')}</td><td>${c.obtained}/${c.maximum}</td><td>${c.pct.toFixed(2)}</td><td>${c.grade}</td><td><span class="badge ${c.status.toLowerCase()}">${c.status}</span></td><td title="${esc(issues)}">${esc(issues||'—')}</td><td><button class="btn btn-outline" style="padding:6px 8px" onclick="editStudent('${r.id}')">Edit</button> <button class="btn btn-danger" style="padding:6px 8px" onclick="deleteStudent('${r.id}')">Delete</button></td></tr>`;
+ }).join(''):'<tr><td colspan="99" class="empty">No matching result</td></tr>';
+}
+
+function loadSettings(){
+ document.getElementById('sName').value=state.settings.schoolName||'';
+ document.getElementById('sSession').value=state.settings.session||'';
+ document.getElementById('sPass').value=state.settings.passPercentage;
+ document.getElementById('sSubjectPass').value=state.settings.subjectPassPercentage;
+ document.getElementById('sPrincipal').value=state.settings.principal||'';
+ document.getElementById('sAddress').value=state.settings.address||'';
+ if(document.getElementById('sVicePrincipal'))document.getElementById('sVicePrincipal').value=state.settings.vicePrincipal||'';
+ if(document.getElementById('sClassTeacher'))document.getElementById('sClassTeacher').value=state.settings.classTeacher||'';
+ if(document.getElementById('sSchoolCode'))document.getElementById('sSchoolCode').value=state.settings.schoolCode||'';
+ if(document.getElementById('sAffiliationNo'))document.getElementById('sAffiliationNo').value=state.settings.affiliationNo||'';
+}
+function saveSettings(){
+ let op=n(document.getElementById('sPass').value),sp=n(document.getElementById('sSubjectPass').value);
+ if(!Number.isFinite(op)||op<0||op>100||!Number.isFinite(sp)||sp<0||sp>100)return toast('Pass percentages must be between 0 and 100');
+ state.settings={...state.settings,schoolName:clean(document.getElementById('sName').value)||'Jawahar Navodaya Vidyalaya',session:clean(document.getElementById('sSession').value),
+  passPercentage:op,subjectPassPercentage:sp,principal:clean(document.getElementById('sPrincipal').value),address:clean(document.getElementById('sAddress').value),
+  vicePrincipal:clean(document.getElementById('sVicePrincipal')?.value),classTeacher:clean(document.getElementById('sClassTeacher')?.value),
+  schoolCode:clean(document.getElementById('sSchoolCode')?.value),affiliationNo:clean(document.getElementById('sAffiliationNo')?.value)};
+ persist(); renderAll(); toast('School settings saved locally');
+}
+
+function configuredUTMax(cl){
+ let vals=schoolExamConfig(cl).filter(x=>x.type==='ut').map(x=>n(x.max)).filter(Number.isFinite);
+ return vals.length?Math.max(...vals):100;
+}
+function bestUTPercent(rec,subject,rawUT){
+ let candidates=state.records.filter(r=>r.className===rec.className&&norm(r.section)===norm(rec.section)&&
+  ((rec.admissionNo&&norm(r.admissionNo)===norm(rec.admissionNo))||(rec.rollNo&&norm(r.rollNo)===norm(rec.rollNo)))&&
+  examPattern(r.className,r.exam).type==='ut').map(r=>r.marks?.[subject]).filter(validMark).map(m=>n(m.score)/n(m.max));
+ if(Number.isFinite(rawUT)){
+  let um=configuredUTMax(rec.className); if(um>0)candidates.push(rawUT/um);
+ }
+ return candidates.length?Math.max(...candidates):NaN;
+}
+async function importAllSubjectExcel(file){
+ if(!file)return;
+ let cl=document.getElementById('uClass').value,section=clean(document.getElementById('uSection').value).toUpperCase(),exam=clean(document.getElementById('uExam').value),
+ teacher=clean(document.getElementById('uTeacher').value),subjects=classSubjects(cl),pat=examPattern(cl,exam);
+ if(!cl||!section||!exam)return toast('Select class, section and exam first');
+ try{
+  let wb=await readWorkbook(file),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}); if(!rows.length)throw Error('The sheet is empty');
+  let headers=Object.keys(rows[0]),headerMap=new Map(headers.map(h=>[norm(h),h])),added=0,updated=0,errors=[],cells=0;
+  for(let [i,row] of rows.entries()){
+   let line=i+2,name=clean(rowValue(row,['studentname','name','student'])),roll=clean(rowValue(row,['rollno','rollnumber','roll'])),adm=clean(rowValue(row,['admissionno','admissionnumber','admno'])),
+   gender=clean(rowValue(row,['gender','sex'])),dob=clean(rowValue(row,['dateofbirth','dob'])),father=clean(rowValue(row,['fathername','fathersname'])),
+   mother=clean(rowValue(row,['mothername','mothersname'])),house=clean(rowValue(row,['house','housename'])),guardian=clean(rowValue(row,['guardianname','parentguardian','parentguardianname']));
+   if(!name||(!roll&&!adm)){errors.push(`Row ${line}: name and roll/admission number required`);continue}
+   let candidates=state.records.filter(r=>r.className===cl&&norm(r.section)===norm(section)&&norm(r.exam)===norm(exam)),
+   rec=(adm&&candidates.find(r=>norm(r.admissionNo)===norm(adm)))||(roll&&candidates.find(r=>norm(r.rollNo)===norm(roll)));
+   if(!rec){rec={id:crypto.randomUUID(),name,rollNo:roll,admissionNo:adm,className:cl,section,exam,classTeacher:teacher,gender,dob,fatherName:father,motherName:mother,house,guardianName:guardian,marks:{},extraSubjects:[]};state.records.push(rec);added++}
+   else updated++;
+   Object.assign(rec,{name,rollNo:roll||rec.rollNo,admissionNo:adm||rec.admissionNo,classTeacher:teacher||rec.classTeacher,gender:gender||rec.gender,dob:dob||rec.dob,
+    fatherName:father||rec.fatherName,motherName:mother||rec.motherName,house:house||rec.house,guardianName:guardian||rec.guardianName});
+   for(let subject of subjects){
+    let mark=null;
+    if(pat.type==='term'){
+     let theory=componentNumber(row,headerMap,[subject+' Theory',subject]); if(!Number.isFinite(theory))continue;
+     let rawUT=componentNumber(row,headerMap,[subject+' Best UT',subject+' Periodic Test']),bestPct=bestUTPercent(rec,subject,rawUT),
+     q=pat.componentMax/4,converted=Number.isFinite(bestPct)?bestPct*q:0,
+     notebook=componentNumber(row,headerMap,[subject+' Notebook']),enrich=componentNumber(row,headerMap,[subject+' Subject Enrichment']),multiple=componentNumber(row,headerMap,[subject+' Multiple Assessment']);
+     notebook=Number.isFinite(notebook)?notebook:0; enrich=Number.isFinite(enrich)?enrich:0; multiple=Number.isFinite(multiple)?multiple:0;
+     if(theory<0||theory>pat.theoryMax||[notebook,enrich,multiple].some(x=>x<0||x>q+.0001)){errors.push(`Row ${line}: invalid ${subject} component marks`);continue}
+     let internal=Math.min(pat.componentMax,converted+notebook+enrich+multiple);
+     mark={score:+(theory+internal).toFixed(2),max:pat.max,details:{theory,theoryMax:pat.theoryMax,bestUTPercent:Number.isFinite(bestPct)?+(bestPct*100).toFixed(2):null,convertedUT:+converted.toFixed(2),notebook,enrichment:enrich,multiple,internal:+internal.toFixed(2),internalMax:pat.componentMax}};
+    }else if(pat.type==='seniorTerm'){
+     let theory=componentNumber(row,headerMap,[subject+' Theory',subject]),theoryMax=componentNumber(row,headerMap,[subject+' Theory Max',subject+' Maximum Marks',subject+' Max']),
+     component=componentNumber(row,headerMap,[subject+' Practical / Internal',subject+' Practical',subject+' Internal']);
+     if(!Number.isFinite(theory))continue; if(!Number.isFinite(theoryMax))theoryMax=pat.theoryMax;
+     let componentMax=pat.max-theoryMax; component=Number.isFinite(component)?component:0;
+     if(theoryMax<0||theoryMax>pat.max||theory<0||theory>theoryMax||component<0||component>componentMax){errors.push(`Row ${line}: invalid ${subject} theory/practical marks`);continue}
+     mark={score:+(theory+component).toFixed(2),max:pat.max,details:{theory,theoryMax,component,componentMax,componentLabel:componentMax>0?'Practical / Internal':'No Component'}};
+    }else{
+     let h=headerMap.get(norm(subject)); if(!h||clean(row[h])==='')continue;
+     mark=parseFlexibleMark(row[h],pat.max); if(mark?.error){errors.push(`Row ${line}: invalid ${subject} marks`);continue}
+    }
+    rec.marks[subject]=mark; cells++;
+   }
+  }
+  persist(); renderAll();
+  document.getElementById('importPreview').innerHTML=`<div class="${errors.length?'error-box':'success-box'}"><b>${esc(exam)} upload completed:</b> ${added} new students, ${updated} updated and ${cells} subject results calculated and saved locally.${errors.length?`<div class="validation-list"><b>Validation notes:</b><br>${errors.map(esc).join('<br>')}</div>`:''}</div>`;
+  toast(`${added+updated} students processed`);
+ }catch(e){document.getElementById('importPreview').innerHTML=`<div class="error-box"><b>Upload failed:</b> ${esc(e.message)}</div>`}
+}
+function downloadAllSubjectTemplate(){
+ let cl=document.getElementById('uClass')?.value||'6',exam=document.getElementById('uExam')?.value||examTypesForClass(cl)[0],pat=examPattern(cl,exam),subjects=classSubjects(cl),
+ base=['Student Name','Roll No','Admission No','Gender','Date of Birth','Father Name','Mother Name','House','Guardian Name'],header=[...base];
+ if(pat.type==='term')subjects.forEach(s=>header.push(`${s} Theory`,`${s} Best UT`,`${s} Notebook`,`${s} Subject Enrichment`,`${s} Multiple Assessment`));
+ else if(pat.type==='seniorTerm')subjects.forEach(s=>header.push(`${s} Theory`,`${s} Theory Max`,`${s} Practical / Internal`)); else header.push(...subjects);
+ let sample=['Aarav Sharma','1','ADM001','Boy','2013-04-15','Rajesh Sharma','Sunita Sharma','Aravali','Rajesh Sharma'];
+ if(pat.type==='term'){
+  let utMax=configuredUTMax(cl),q=pat.componentMax/4;
+  subjects.forEach(()=>sample.push(Math.round(pat.theoryMax*.82),Math.round(utMax*.84),+q.toFixed(2),+(q*.8).toFixed(2),+q.toFixed(2)));
+ }else if(pat.type==='seniorTerm')subjects.forEach(()=>sample.push(Math.round(pat.theoryMax*.82),pat.theoryMax,Math.round(pat.componentMax*.85)));
+ else subjects.forEach(()=>sample.push(Math.round(pat.max*.78)));
+ let instructions=[['CLASS-WISE EXAM UPLOAD TEMPLATE'],[`Class: ${cl}`],[`Exam: ${exam}`],[`Final subject maximum: ${pat.max}`],
+ ['Do not change column headings.'],['Student profile fields can be corrected later from Students & Marks > Edit. All edits are saved in local storage.'],
+ [`Current school exam rule: Theory ${pat.theoryMax}; Internal/Practical ${pat.componentMax}; Total ${pat.max}.`],
+ ['Additional/extra subjects can be added student-wise from the Edit Student screen and can optionally be included in total.']];
+ workbookDownload({[`Class ${cl} ${exam}`]:[header,sample],Instructions:instructions},safe(`JNV_Class_${cl}_${exam}_Marks_Template`));
+}
+function downloadRosterTemplate(){
+ workbookDownload({'Class Roster':[['Student Name','Roll No','Admission No','Gender','Date of Birth','Father Name','Mother Name','House','Guardian Name'],
+ ['Aarav Sharma','1','ADM001','Boy','2013-04-15','Rajesh Sharma','Sunita Sharma','Aravali','Rajesh Sharma']]},'JNV_Class_Roster_Template');
+}
+async function importRoster(file){
+ if(!file)return; let cl=document.getElementById('uClass').value,section=clean(document.getElementById('uSection').value).toUpperCase(); if(!cl||!section)return toast('Select class and section first');
+ try{
+  let wb=await readWorkbook(file),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}),errors=[],count=0;
+  for(let [i,row] of rows.entries()){
+   let name=clean(rowValue(row,['studentname','name','student'])),roll=clean(rowValue(row,['rollno','rollnumber','roll'])),adm=clean(rowValue(row,['admissionno','admissionnumber','admno']));
+   if(!name||(!roll&&!adm)){errors.push(`Row ${i+2}: name and roll/admission number required`);continue}
+   let dup=state.roster.find(r=>r.className===cl&&norm(r.section)===norm(section)&&((roll&&norm(r.rollNo)===norm(roll))||(adm&&norm(r.admissionNo)===norm(adm))));
+   let obj={id:dup?.id||crypto.randomUUID(),name,rollNo:roll,admissionNo:adm,className:cl,section,gender:clean(rowValue(row,['gender','sex'])),dob:clean(rowValue(row,['dateofbirth','dob'])),
+    fatherName:clean(rowValue(row,['fathername','fathersname'])),motherName:clean(rowValue(row,['mothername','mothersname'])),house:clean(rowValue(row,['house','housename'])),guardianName:clean(rowValue(row,['guardianname','parentguardian','parentguardianname']))};
+   if(dup)Object.assign(dup,obj); else state.roster.push(obj); count++;
+  }
+  persist(); document.getElementById('importPreview').innerHTML=`<div class="success-box"><b>Roster imported:</b> ${count} students and profile details.${errors.length?' '+errors.length+' rows skipped.':''}</div>`; toast('Class roster imported');
+ }catch(e){toast('Could not read roster file')}
+}
+
+function reportCardRowsV4(r){
+ let regular=classSubjects(r.className).map(s=>{let m=r.marks?.[s];return['Regular',s,validMark(m)?m.score:'-',validMark(m)?m.max:'-',validMark(m)?(m.score/m.max*100).toFixed(2)+'%':'-',validMark(m)?(m.score>=m.max*state.settings.subjectPassPercentage/100?'Pass':'Fail'):'Missing']});
+ let extra=(r.extraSubjects||[]).map(m=>['Additional'+(m.includeInTotal?' *':''),m.name,m.score,m.max,(m.score/m.max*100).toFixed(2)+'%',m.score>=m.max*state.settings.subjectPassPercentage/100?'Pass':'Fail']);
+ return[...regular,...extra];
+}
+function cardPDFV4(rows,meta){
+ let {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'portrait'});
+ rows.forEach((r,i)=>{
+  if(i)doc.addPage();
+  let c=calc(r),rank=ranks(filtered(r.exam,r.className,r.section)).find(x=>x.id===r.id)?._rank||'-',w=doc.internal.pageSize.getWidth();
+  doc.setDrawColor(30,64,175);doc.setLineWidth(.5);doc.roundedRect(8,8,w-16,281,3,3);
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text(meta.schoolName,w/2,16,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+  let ids=[meta.address,state.settings.schoolCode?`School Code: ${state.settings.schoolCode}`:'',state.settings.affiliationNo?`CBSE Affiliation: ${state.settings.affiliationNo}`:''].filter(Boolean).join(' | ');
+  if(ids)doc.text(ids,w/2,21,{align:'center',maxWidth:w-24});
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('STUDENT REPORT CARD',w/2,29,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8.3);
+  let left=[`Student: ${r.name||'-'}`,`Father: ${r.fatherName||'-'}`,`Mother: ${r.motherName||'-'}`,`House: ${r.house||'-'}`,`Date of Birth: ${r.dob||'-'}`],
+      right=[`Class / Section: ${r.className||'-'} / ${r.section||'-'}`,`Roll No: ${r.rollNo||'-'}`,`Admission No: ${r.admissionNo||'-'}`,`Exam: ${r.exam||'-'}`,`Session: ${meta.session||state.settings.session||'-'}`];
+  left.forEach((t,k)=>doc.text(t,13,38+k*5.2,{maxWidth:91})); right.forEach((t,k)=>doc.text(t,108,38+k*5.2,{maxWidth:89}));
+  let body=reportCardRowsV4(r);
+  doc.autoTable({startY:67,head:[['Type','Subject','Obtained','Maximum','Percentage','Status']],body,theme:'grid',
+   headStyles:{fillColor:[37,99,235],textColor:[255,255,255]},alternateRowStyles:{fillColor:[245,247,255]},
+   styles:{fontSize:7.4,cellPadding:1.8,overflow:'linebreak'},margin:{left:11,right:11}});
+  let y=doc.lastAutoTable.finalY+6;
+  doc.setFillColor(239,246,255);doc.roundedRect(11,y,188,18,2,2,'F');doc.setTextColor(11,31,75);doc.setFont('helvetica','bold');doc.setFontSize(8.2);
+  doc.text(`Total: ${c.obtained}/${c.maximum}`,15,y+7);doc.text(`Percentage: ${c.pct.toFixed(2)}%`,57,y+7);doc.text(`Grade: ${c.grade}`,115,y+7);doc.text(`Rank: ${rank}`,145,y+7);doc.text(`Result: ${c.status}`,171,y+7);
+  doc.setFont('helvetica','normal');doc.setTextColor(23,32,51);doc.setFontSize(7.4);
+  doc.text('* Additional subject is included in total/percentage only when marked with *.',15,y+14);
+  let remark=c.status==='Pass'?(c.pct>=75?'Excellent performance. Keep progressing with confidence.':'Good effort. Continue regular practice for further improvement.'):(c.status==='Incomplete'?'Result is incomplete because some required subject marks are missing.':'Needs focused support and regular subject-wise practice.');
+  let ry=y+26;doc.setFont('helvetica','bold');doc.text("Class Teacher's Remark:",13,ry);doc.setFont('helvetica','normal');doc.text(remark,48,ry,{maxWidth:147});
+  if(c.missing.length){doc.setFontSize(7);doc.text(`Missing Subjects: ${c.missing.join(', ')}`,13,ry+6,{maxWidth:182})}
+  let signY=Math.max(258,ry+26); if(signY>271)signY=271;
+  let xs=[28,78,130,180],names=[meta.teacherName||r.classTeacher||state.settings.classTeacher||'',state.settings.vicePrincipal||'',state.settings.principal||'',r.guardianName||''];
+  let labels=['Class Teacher','Vice Principal','Principal','Parent / Guardian'];
+  xs.forEach((x,k)=>{doc.line(x-17,signY,x+17,signY);doc.setFontSize(6.7);if(names[k])doc.text(names[k],x,signY+4,{align:'center',maxWidth:34});doc.setFont('helvetica','bold');doc.text(labels[k],x,signY+8,{align:'center'});doc.setFont('helvetica','normal')});
+ });
+ let pages=doc.internal.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(6.5);doc.text(`Generated from JNV Result Studio | Page ${i} of ${pages}`,doc.internal.pageSize.getWidth()/2,286,{align:'center'})}
+ return doc;
+}
+const _v3GenerateReportV4=generateReport;
+generateReport=function(format){
+ let type=document.getElementById('rType').value;
+ if(type!=='cards')return _v3GenerateReportV4(format);
+ let meta=reportMeta(); if(!validateMeta(meta))return; let rows=reportRows(); if(!rows.length)return toast('No data for selected filters');
+ if(format==='xlsx'){
+  let data=[['School',meta.schoolName],['Address',meta.address],['Session',meta.session],[],['Student','Father','Mother','House','Class','Section','Roll','Admission','Exam','Extra Subjects','Total','Maximum','Percentage','Grade','Status']];
+  rows.forEach(r=>{let c=calc(r);data.push([r.name,r.fatherName||'',r.motherName||'',r.house||'',r.className,r.section,r.rollNo,r.admissionNo,r.exam,(r.extraSubjects||[]).map(x=>`${x.name} ${x.score}/${x.max}${x.includeInTotal?'*':''}`).join('; '),c.obtained,c.maximum,c.pct.toFixed(2),c.grade,c.status])});
+  workbookDownload({'Report Cards Data':data},safe(meta.schoolName+'_Student_Report_Cards'));closeModal('reportModal');toast('Report card data downloaded');return;
+ }
+ let doc=cardPDFV4(rows,meta);doc.save(safe(meta.schoolName+'_Student_Report_Cards')+'.pdf');closeModal('reportModal');toast('Printable report cards downloaded');
+};
+
+const _v3ReportDataV4=reportData;
+reportData=function(){
+ let d=_v3ReportDataV4();
+ if(['class','status','cards'].includes(d.type)){
+  let cl=document.getElementById('rClass').value,subs=cl?classSubjects(cl):allSubjects(),rows=d.rows;
+  if(d.type!=='cards'){
+   d.head=['Rank','Roll No','Admission No','Student','House','Father','Mother','Class','Section',...subs,'Extra Subjects','Total','Percentage','Grade','Status','Failed Subjects','Missing Subjects'];
+   let rm=new Map(ranks(rows).map(r=>[r.id,r._rank]));
+   d.body=rows.map(r=>{let c=calc(r);return[rm.get(r.id)||'',r.rollNo,r.admissionNo,r.name,r.house||'',r.fatherName||'',r.motherName||'',r.className,r.section,...subs.map(s=>validMark(r.marks?.[s])?`${r.marks[s].score}/${r.marks[s].max}`:'-'),(r.extraSubjects||[]).map(x=>`${x.name}:${x.score}/${x.max}${x.includeInTotal?'*':''}`).join('; '),`${c.obtained}/${c.maximum}`,c.pct.toFixed(2),c.grade,c.status,c.failed.join(', '),c.missing.join(', ')]});
+  }
+ }
+ return d;
+};
+
+const _v3ExportCompleteExcelV4=exportCompleteExcel;
+exportCompleteExcel=function(meta={}){
+ let rows=state.records,subs=allSubjects(),master=[['Roll No','Admission No','Student','Father','Mother','House','Guardian','Class','Section','Exam','Class Teacher',...subs,'Extra Subjects','Total','Maximum','Percentage','Grade','Status','Failed Subjects','Missing Subjects']];
+ rows.forEach(r=>{let c=calc(r);master.push([r.rollNo,r.admissionNo,r.name,r.fatherName||'',r.motherName||'',r.house||'',r.guardianName||'',r.className,r.section,r.exam,r.classTeacher||'',...subs.map(s=>validMark(r.marks?.[s])?`${r.marks[s].score}/${r.marks[s].max}`:''),(r.extraSubjects||[]).map(x=>`${x.name}:${x.score}/${x.max}${x.includeInTotal?'*':''}`).join('; '),c.obtained,c.maximum,c.pct.toFixed(2),c.grade,c.status,c.failed.join(', '),c.missing.join(', ')])});
+ let examSheet=[['Class','Exam Name','Total Marks','Theory Marks','Internal / Practical','Calculation Type']];
+ CLASSES.forEach(cl=>schoolExamConfig(cl).forEach(x=>examSheet.push([cl,x.name,x.max,x.theoryMax,x.componentMax,x.type])));
+ let sheets={'Master Result':[[meta.schoolName||state.settings.schoolName],[meta.address||state.settings.address],[`Academic Session: ${meta.session||state.settings.session}`],[],...master],'Exam Settings':examSheet};
+ for(let cl of CLASSES){
+  let rr=rows.filter(r=>r.className===cl);if(!rr.length)continue;let ss=classSubjects(cl),h=[['Rank','Roll','Admission No','Student','House','Section','Exam',...ss,'Extra Subjects','Total','%','Grade','Status']],rm=new Map(ranks(rr).map(r=>[r.id,r._rank]));
+  rr.forEach(r=>{let c=calc(r);h.push([rm.get(r.id)||'',r.rollNo,r.admissionNo,r.name,r.house||'',r.section,r.exam,...ss.map(s=>validMark(r.marks?.[s])?`${r.marks[s].score}/${r.marks[s].max}`:''),(r.extraSubjects||[]).map(x=>`${x.name}:${x.score}/${x.max}${x.includeInTotal?'*':''}`).join('; '),`${c.obtained}/${c.maximum}`,c.pct.toFixed(2),c.grade,c.status])});sheets['Class '+cl]=h;
+ }
+ workbookDownload(sheets,safe((meta.schoolName||state.settings.schoolName)+'_Complete_Result'));toast('Complete Excel workbook downloaded');
+};
+
+const _v3ShowPageV4=showPage;
+showPage=function(id){
+ _v3ShowPageV4(id); if(id==='pattern')renderExamSettings();
+};
+const _v3RenderAllV4=renderAll;
+renderAll=function(){
+ _v3RenderAllV4(); if(document.getElementById('pattern')?.classList.contains('active'))renderExamSettings();
+};
+
+ensureV4State();
+installV4UI();
+/* wire class change after the original HTML was installed */
+document.getElementById('mClass').setAttribute('onchange','refreshStudentExamOptions()');
+renderExamSettings();
+renderAll();
+</script>
+
+</body></html>
