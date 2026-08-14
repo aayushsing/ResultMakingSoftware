@@ -12,7 +12,7 @@
 </style>
 </head>
 <body><div class="app">
-<header class="topbar"><div class="brand"><div class="logo">JNV</div><div><h1 id="brandName">JNV Result Studio</h1><small>Classes VI–XII · All-subject Excel upload · Colourful report cards</small></div></div><div class="header-actions"><button class="btn btn-light" onclick="downloadAllSubjectTemplate()">⬇ All-Subject Template</button><button class="btn btn-light mobile-hide" onclick="showPage('import')">⬆ Upload Class Marks</button><button class="btn btn-light" onclick="openStudentModal()">＋ Add Result</button></div></header>
+<header class="topbar"><div class="brand"><div class="logo">JNV</div><div><h1 id="brandName">JNV Result Studio</h1><small>Classes VI–XII</small></div></div><div class="header-actions"><button class="btn btn-light" onclick="downloadAllSubjectTemplate()">⬇ All-Subject Template</button><button class="btn btn-light mobile-hide" onclick="showPage('import')">⬆ Upload Class Marks</button><button class="btn btn-light" onclick="openStudentModal()">＋ Add Result</button></div></header>
 <div class="layout"><aside class="sidebar"><nav class="nav">
 <button class="active" data-page="dashboard" onclick="showPage('dashboard',this)">▦ Dashboard</button>
 <button data-page="students" onclick="showPage('students',this)">👥 Students & Marks</button>
@@ -21,20 +21,20 @@
 <button data-page="import" onclick="showPage('import',this)">⬆ Class Marks Upload</button>
 <button data-page="subjects" onclick="showPage('subjects',this)">📚 Class Subjects</button><button data-page="pattern" onclick="showPage('pattern',this)">🗓 Exam Pattern</button>
 <button data-page="settings" onclick="showPage('settings',this)">⚙ Settings</button>
-</nav><div class="side-note"><b>Safe result logic</b><br>Marks are checked against maximum marks. Duplicate names are matched by roll/admission number. Incomplete records are not ranked.</div></aside>
+</nav><div class="side-note"><b>Local Data</b><br>Edits and marks are saved in this browser.</div></aside>
 <main class="content">
-<section id="dashboard" class="page active"><div class="page-title"><div><h2>JNV Result Dashboard</h2><p>Class VI to XII academic performance at a glance</p></div><select id="dashExam" onchange="renderAll()"></select></div><div id="kpis" class="grid kpis"></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Class Performance</h3><div id="classBars" class="bars"></div></div><div class="card"><h3 class="section-title">Top Performers</h3><div id="topStudents" class="list"></div></div></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Subject Performance</h3><div id="subjectPerformance"></div></div><div class="card"><h3 class="section-title">Pass / Fail / Incomplete</h3><div id="classPassFail"></div></div></div></section>
-<section id="students" class="page"><div class="page-title"><div><h2>Students & Marks</h2><p>Search, verify, edit and remove uploaded results</p></div><button class="btn btn-primary" onclick="openStudentModal()">＋ Add Student Result</button></div><div class="card"><div class="filters"><div class="field"><label>Search</label><input id="search" placeholder="Name, roll or admission no." oninput="renderStudents()"></div><div class="field"><label>Class</label><select id="fClass" onchange="cascadeFilters('f');renderStudents()"></select></div><div class="field"><label>Section</label><select id="fSection" onchange="renderStudents()"></select></div><div class="field"><label>Exam</label><select id="fExam" onchange="renderStudents()"></select></div><div class="field"><label>Result</label><select id="fResult" onchange="renderStudents()"><option value="">All</option><option>Pass</option><option>Fail</option><option>Incomplete</option></select></div></div><div class="table-wrap"><table><thead id="studentHead"></thead><tbody id="studentBody"></tbody></table></div></div></section>
-<section id="analysis" class="page"><div class="page-title"><div><h2>Detailed Analysis</h2><p>Subject averages, pass percentage, grades, toppers and formula checks</p></div></div><div class="card"><div class="filters"><div class="field"><label>Class</label><select id="aClass" onchange="cascadeFilters('a');renderAnalysis()"></select></div><div class="field"><label>Section</label><select id="aSection" onchange="renderAnalysis()"></select></div><div class="field"><label>Exam</label><select id="aExam" onchange="renderAnalysis()"></select></div></div><div id="analysisKpis" class="grid kpis"></div></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Subject-wise Analysis</h3><div id="subjectAnalysis"></div></div><div class="card"><h3 class="section-title">Grade Distribution</h3><div id="gradeAnalysis"></div></div></div><div class="card" style="margin-top:17px"><h3 class="section-title">Rank List (Complete Results Only)</h3><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Roll</th><th>Student</th><th>Class</th><th>Section</th><th>Total</th><th>%</th><th>Grade</th><th>Status</th></tr></thead><tbody id="topperTable"></tbody></table></div></div></section>
-<section id="reports" class="page"><div class="page-title"><div><h2>Reports & Downloads</h2><p>Professional Excel and PDF reports for JNV classes VI–XII</p></div></div><div class="grid three"><div class="card"><h3>Class Result Sheet</h3><p class="muted">All subjects, total, percentage, grade, rank and status.</p><button class="btn btn-primary" onclick="reportDialog('class')">Generate</button></div><div class="card"><h3>Subject Result Sheet</h3><p class="muted">Marks, percentage, topper, average and pass/fail list.</p><button class="btn btn-primary" onclick="reportDialog('subject')">Generate</button></div><div class="card"><h3>Pass / Fail List</h3><p class="muted">Separate lists with failed and missing subjects.</p><button class="btn btn-primary" onclick="reportDialog('status')">Generate</button></div><div class="card"><h3>School Topper Report</h3><p class="muted">Class toppers and subject toppers for each exam.</p><button class="btn btn-primary" onclick="reportDialog('school')">Generate</button></div><div class="card"><h3>Student Report Cards</h3><p class="muted">Colourful one-page report card for every selected student, with result summary and signatures.</p><button class="btn btn-primary" onclick="reportDialog('cards')">Generate</button></div><div class="card"><h3>Complete Excel Workbook</h3><p class="muted">Master data plus class and subject summaries.</p><button class="btn btn-outline" onclick="reportDialog('complete')">Download</button></div></div></section>
-<section id="import" class="page"><div class="page-title"><div><h2>Class-wise All-Subject Excel Upload</h2><p>Upload name, roll number, admission number and all subject marks together in one sheet</p></div></div><div class="grid two"><div class="card"><div class="step-box"><div class="step-title">Step 1 — Select class result details</div><div class="form-grid"><div class="field"><label>Class <span class="required">*</span></label><select id="uClass" onchange="refreshUploadSubjects()"></select></div><div class="field"><label>Section <span class="required">*</span></label><input id="uSection" placeholder="A"></div><div class="field"><label>Exam <span class="required">*</span></label><select id="uExam" onchange="updateExamUploadMode()"></select></div><div class="field"><label>Default Maximum Marks</label><input id="uMax" type="number" min="1" value="100"></div><div class="field"><label>Class Teacher</label><input id="uTeacher" placeholder="Teacher name"></div></div></div><div class="step-box" style="margin-top:14px"><div class="step-title">Step 2 — Upload one Excel for all subjects</div><div id="drop" class="drop" onclick="document.getElementById('subjectFile').click()"><strong>Drop class marks Excel here</strong><span class="muted">Columns: Student Name, Roll No, Admission No, Subject 1, Subject 2, Subject 3…</span><input id="subjectFile" type="file" accept=".xlsx,.xls,.csv" hidden onchange="importAllSubjectExcel(this.files[0])"></div></div><div id="importPreview" style="margin-top:14px"></div></div><div class="card"><h3 class="section-title">All-Subject Excel Format</h3><div class="help"><b>Required columns:</b> Student Name and either Roll No or Admission No.<br><b>Subject columns:</b> Use the exact subject names configured for the selected class.<br><b>Marks format:</b> For UT exams, enter subject marks directly. For Half-Yearly/Annual, the downloaded template includes theory and internal/practical components. You may also use 78/100 for a custom maximum.<br>All student records, totals, percentage, grade, result and rank are created automatically.</div><div class="list" style="margin-top:12px"><div class="list-row"><div><b>Download all-subject class template</b><div class="muted">Automatically includes subjects of the selected class</div></div><button class="btn btn-primary" onclick="downloadAllSubjectTemplate()">Download</button></div><div class="list-row"><div><b>Download subject-wise template</b><div class="muted">Optional old four-column upload format</div></div><button class="btn btn-outline" onclick="downloadSubjectTemplate()">Download</button></div><div class="list-row"><div><b>Download class roster template</b><div class="muted">Optional student master data</div></div><button class="btn btn-outline" onclick="downloadRosterTemplate()">Download</button></div><div class="list-row"><div><b>Upload class roster</b><div class="muted">Name, roll, admission no., gender and DOB</div></div><button class="btn btn-outline" onclick="document.getElementById('rosterFile').click()">Upload</button><input id="rosterFile" hidden type="file" accept=".xlsx,.xls,.csv" onchange="importRoster(this.files[0])"></div><div class="list-row"><div><b>Backup all local data</b><div class="muted">Save and restore on another computer</div></div><button class="btn btn-outline" onclick="exportJSON()">Backup</button></div><div class="list-row"><div><b>Restore backup</b><div class="muted">Restore a JSON backup file</div></div><button class="btn btn-outline" onclick="document.getElementById('jsonFile').click()">Restore</button><input id="jsonFile" hidden type="file" accept=".json" onchange="restoreJSON(this.files[0])"></div></div></div></div></section>
-<section id="subjects" class="page"><div class="page-title"><div><h2>Class-wise Subjects</h2><p>Classes XI and XII can have any Science, Commerce, Humanities or vocational combination</p></div></div><div class="card"><div class="help"><b>Important:</b> A result is marked <b>Incomplete</b> until all configured subjects for that class have marks. Only complete results receive ranks.</div><div id="subjectManager" class="subject-manager" style="margin-top:15px"></div><div style="margin-top:15px"><button class="btn btn-primary" onclick="saveSubjectConfig()">Save Class Subjects</button></div></div></section>
+<section id="dashboard" class="page active"><div class="page-title"><div><h2>JNV Result Dashboard</h2><p></p></div><select id="dashExam" onchange="renderAll()"></select></div><div id="kpis" class="grid kpis"></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Class Performance</h3><div id="classBars" class="bars"></div></div><div class="card"><h3 class="section-title">Top Performers</h3><div id="topStudents" class="list"></div></div></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Subject Performance</h3><div id="subjectPerformance"></div></div><div class="card"><h3 class="section-title">Pass / Fail / Incomplete</h3><div id="classPassFail"></div></div></div></section>
+<section id="students" class="page"><div class="page-title"><div><h2>Students & Marks</h2><p></p></div><button class="btn btn-primary" onclick="openStudentModal()">＋ Add Student Result</button></div><div class="card"><div class="filters"><div class="field"><label>Search</label><input id="search" placeholder="Name, roll or admission no." oninput="renderStudents()"></div><div class="field"><label>Class</label><select id="fClass" onchange="cascadeFilters('f');renderStudents()"></select></div><div class="field"><label>Section</label><select id="fSection" onchange="renderStudents()"></select></div><div class="field"><label>Exam</label><select id="fExam" onchange="renderStudents()"></select></div><div class="field"><label>Result</label><select id="fResult" onchange="renderStudents()"><option value="">All</option><option>Pass</option><option>Fail</option><option>Incomplete</option></select></div></div><div class="table-wrap"><table><thead id="studentHead"></thead><tbody id="studentBody"></tbody></table></div></div></section>
+<section id="analysis" class="page"><div class="page-title"><div><h2>Detailed Analysis</h2><p></p></div></div><div class="card"><div class="filters"><div class="field"><label>Class</label><select id="aClass" onchange="cascadeFilters('a');renderAnalysis()"></select></div><div class="field"><label>Section</label><select id="aSection" onchange="renderAnalysis()"></select></div><div class="field"><label>Exam</label><select id="aExam" onchange="renderAnalysis()"></select></div></div><div id="analysisKpis" class="grid kpis"></div></div><div class="grid two" style="margin-top:17px"><div class="card"><h3 class="section-title">Subject-wise Analysis</h3><div id="subjectAnalysis"></div></div><div class="card"><h3 class="section-title">Grade Distribution</h3><div id="gradeAnalysis"></div></div></div><div class="card" style="margin-top:17px"><h3 class="section-title">Rank List (Complete Results Only)</h3><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Roll</th><th>Student</th><th>Class</th><th>Section</th><th>Total</th><th>%</th><th>Grade</th><th>Status</th></tr></thead><tbody id="topperTable"></tbody></table></div></div></section>
+<section id="reports" class="page"><div class="page-title"><div><h2>Reports & Downloads</h2><p></p></div></div><div class="grid three"><div class="card"><h3>Class Result Sheet</h3><p class="muted">Class-wise result register with subject analysis.</p><button class="btn btn-primary" onclick="reportDialog('class')">Generate</button></div><div class="card"><h3>Subject Result Sheet</h3><p class="muted">Subject-wise marks and performance.</p><button class="btn btn-primary" onclick="reportDialog('subject')">Generate</button></div><div class="card"><h3>Pass / Fail List</h3><p class="muted">Pass, fail and incomplete students.</p><button class="btn btn-primary" onclick="reportDialog('status')">Generate</button></div><div class="card"><h3>School Topper Report</h3><p class="muted">Class and subject toppers.</p><button class="btn btn-primary" onclick="reportDialog('school')">Generate</button></div><div class="card"><h3>Student Report Cards</h3><p class="muted">Student A4 report cards.</p><button class="btn btn-primary" onclick="reportDialog('cards')">Generate</button></div><div class="card"><h3>All Class Result Workbook</h3><p class="muted">All class result registers in one Excel file.</p><button class="btn btn-outline" onclick="reportDialog('complete')">Download</button></div></div></section>
+<section id="import" class="page"><div class="page-title"><div><h2>Class-wise All-Subject Excel Upload</h2><p></p></div></div><div class="grid two"><div class="card"><div class="step-box"><div class="step-title">Step 1 — Select class result details</div><div class="form-grid"><div class="field"><label>Class <span class="required">*</span></label><select id="uClass" onchange="refreshUploadSubjects()"></select></div><div class="field"><label>Section <span class="required">*</span></label><input id="uSection" placeholder="A"></div><div class="field"><label>Exam <span class="required">*</span></label><select id="uExam" onchange="updateExamUploadMode()"></select></div><div class="field"><label>Default Maximum Marks</label><input id="uMax" type="number" min="1" value="100"></div><div class="field"><label>Class Teacher</label><input id="uTeacher" placeholder="Teacher name"></div></div></div><div class="step-box" style="margin-top:14px"><div class="step-title">Step 2 — Upload one Excel for all subjects</div><div id="drop" class="drop" onclick="document.getElementById('subjectFile').click()"><strong>Drop class marks Excel here</strong><span class="muted">Columns: Student Name, Roll No, Admission No, Subject 1, Subject 2, Subject 3…</span><input id="subjectFile" type="file" accept=".xlsx,.xls,.csv" hidden onchange="importAllSubjectExcel(this.files[0])"></div></div><div id="importPreview" style="margin-top:14px"></div></div><div class="card"><h3 class="section-title">All-Subject Excel Format</h3><div class="help"><b>Required columns:</b> Student Name and either Roll No or Admission No.<br><b>Subject columns:</b> Use the exact subject names configured for the selected class.<br><b>Marks format:</b> For UT exams, enter subject marks directly. For Half-Yearly/Annual, the downloaded template includes theory and internal/practical components. You may also use 78/100 for a custom maximum.<br>All student records, totals, percentage, grade, result and rank are created automatically.</div><div class="list" style="margin-top:12px"><div class="list-row"><div><b>Download all-subject class template</b><div class="muted">Automatically includes subjects of the selected class</div></div><button class="btn btn-primary" onclick="downloadAllSubjectTemplate()">Download</button></div><div class="list-row"><div><b>Download subject-wise template</b><div class="muted">Optional old four-column upload format</div></div><button class="btn btn-outline" onclick="downloadSubjectTemplate()">Download</button></div><div class="list-row"><div><b>Download class roster template</b><div class="muted">Optional student master data</div></div><button class="btn btn-outline" onclick="downloadRosterTemplate()">Download</button></div><div class="list-row"><div><b>Upload class roster</b><div class="muted">Name, roll, admission no., gender and DOB</div></div><button class="btn btn-outline" onclick="document.getElementById('rosterFile').click()">Upload</button><input id="rosterFile" hidden type="file" accept=".xlsx,.xls,.csv" onchange="importRoster(this.files[0])"></div><div class="list-row"><div><b>Backup all local data</b><div class="muted">Save and restore on another computer</div></div><button class="btn btn-outline" onclick="exportJSON()">Backup</button></div><div class="list-row"><div><b>Restore backup</b><div class="muted">Restore a JSON backup file</div></div><button class="btn btn-outline" onclick="document.getElementById('jsonFile').click()">Restore</button><input id="jsonFile" hidden type="file" accept=".json" onchange="restoreJSON(this.files[0])"></div></div></div></div></section>
+<section id="subjects" class="page"><div class="page-title"><div><h2>Class-wise Subjects</h2><p></p></div></div><div class="card"><div class="help"><b>Important:</b> A result is marked <b>Incomplete</b> until all configured subjects for that class have marks. Only complete results receive ranks.</div><div id="subjectManager" class="subject-manager" style="margin-top:15px"></div><div style="margin-top:15px"><button class="btn btn-primary" onclick="saveSubjectConfig()">Save Class Subjects</button></div></div></section>
 <section id="pattern" class="page"><div class="page-title"><div><h2>Class-wise Exam & Assessment Pattern</h2><p>Automatic maximum marks, internal assessment, practical marks and grade rules</p></div></div>
 <div class="grid three"><div class="card"><h3>Classes 6–8</h3><div class="list"><div class="list-row"><span>UT-1, UT-2, UT-3, UT-4</span><b>25</b></div><div class="list-row"><span>Half-Yearly Theory</span><b>80</b></div><div class="list-row"><span>Annual Theory</span><b>80</b></div><div class="list-row"><span>Internal Assessment</span><b>20</b></div></div><p class="muted">Internal: Best UT converted to 5 + Notebook 5 + Subject Enrichment 5 + Multiple Assessment 5.</p></div>
 <div class="card"><h3>Classes 9–10</h3><div class="list"><div class="list-row"><span>UT-1, UT-2, UT-3</span><b>30</b></div><div class="list-row"><span>Half-Yearly / Annual Theory</span><b>80</b></div><div class="list-row"><span>Pre-Board</span><b>80</b></div><div class="list-row"><span>Internal Assessment</span><b>20</b></div></div><p class="muted">Internal: Periodic Test 5 + Notebook 5 + Subject Enrichment 5 + Multiple Assessment 5.</p></div>
 <div class="card"><h3>Classes 11–12</h3><div class="list"><div class="list-row"><span>UT-1, UT-2, UT-3</span><b>30</b></div><div class="list-row"><span>Half-Yearly / Annual Theory</span><b>70</b></div><div class="list-row"><span>Practical</span><b>30</b></div><div class="list-row"><span>Final Subject Total</span><b>100</b></div></div><p class="muted">For non-practical subjects, enter the applicable maximum directly in the Excel cell as Obtained/Maximum.</p></div></div>
 <div class="card" style="margin-top:17px"><h3>Automatic Grade Scale</h3><div class="table-wrap"><table><thead><tr><th>Percentage</th><th>Grade</th><th>Percentage</th><th>Grade</th></tr></thead><tbody><tr><td>91–100</td><td>A1</td><td>81–90</td><td>A2</td></tr><tr><td>71–80</td><td>B1</td><td>61–70</td><td>B2</td></tr><tr><td>51–60</td><td>C1</td><td>41–50</td><td>C2</td></tr><tr><td>33–40</td><td>D</td><td>Below 33</td><td>E</td></tr></tbody></table></div></div>
-<div class="card" style="margin-top:17px"><h3>Suggested Academic Calendar</h3><div class="table-wrap"><table><thead><tr><th>Month</th><th>Examination</th></tr></thead><tbody><tr><td>April</td><td>Session Starts</td></tr><tr><td>July</td><td>UT-1</td></tr><tr><td>September</td><td>Half-Yearly</td></tr><tr><td>November</td><td>UT-2</td></tr><tr><td>January</td><td>UT-3</td></tr><tr><td>February</td><td>UT-4 / Pre-Board, if conducted</td></tr><tr><td>March</td><td>Annual Examination / Board Exams</td></tr></tbody></table></div></div></section><section id="settings" class="page"><div class="page-title"><div><h2>School Settings</h2><p>Configure school identity, academic session and result rules</p></div></div><div class="card"><div class="form-grid"><div class="field"><label>School Name</label><input id="sName"></div><div class="field"><label>Academic Session</label><input id="sSession" placeholder="2026-27"></div><div class="field"><label>Overall Pass Percentage</label><input id="sPass" type="number" min="0" max="100"></div><div class="field"><label>Subject Pass Percentage</label><input id="sSubjectPass" type="number" min="0" max="100"></div><div class="field"><label>Principal Name</label><input id="sPrincipal"></div><div class="field"><label>School Address</label><input id="sAddress"></div></div><button class="btn btn-primary" style="margin-top:15px" onclick="saveSettings()">Save Settings</button></div><div class="card danger-zone" style="margin-top:17px"><h3>Reset Data</h3><p>This permanently removes all locally saved students and marks from this browser.</p><button class="btn btn-danger" onclick="resetData()">Delete All Result Data</button></div></section>
+<div class="card" style="margin-top:17px"><h3>Suggested Academic Calendar</h3><div class="table-wrap"><table><thead><tr><th>Month</th><th>Examination</th></tr></thead><tbody><tr><td>April</td><td>Session Starts</td></tr><tr><td>July</td><td>UT-1</td></tr><tr><td>September</td><td>Half-Yearly</td></tr><tr><td>November</td><td>UT-2</td></tr><tr><td>January</td><td>UT-3</td></tr><tr><td>February</td><td>UT-4 / Pre-Board, if conducted</td></tr><tr><td>March</td><td>Annual Examination / Board Exams</td></tr></tbody></table></div></div></section><section id="settings" class="page"><div class="page-title"><div><h2>School Settings</h2><p></p></div></div><div class="card"><div class="form-grid"><div class="field"><label>School Name</label><input id="sName"></div><div class="field"><label>Academic Session</label><input id="sSession" placeholder="2026-27"></div><div class="field"><label>Overall Pass Percentage</label><input id="sPass" type="number" min="0" max="100"></div><div class="field"><label>Subject Pass Percentage</label><input id="sSubjectPass" type="number" min="0" max="100"></div><div class="field"><label>Principal Name</label><input id="sPrincipal"></div><div class="field"><label>School Address</label><input id="sAddress"></div></div><button class="btn btn-primary" style="margin-top:15px" onclick="saveSettings()">Save Settings</button></div><div class="card danger-zone" style="margin-top:17px"><h3>Reset Data</h3><p>This permanently removes all locally saved students and marks from this browser.</p><button class="btn btn-danger" onclick="resetData()">Delete All Result Data</button></div></section>
 </main></div></div>
 <div id="studentModal" class="modal"><div class="modal-box"><div class="modal-head"><h3>Add / Edit Student Result</h3><button class="close" onclick="closeModal('studentModal')">×</button></div><div class="form-grid"><div class="field"><label>Student Name *</label><input id="mName"></div><div class="field"><label>Roll No. *</label><input id="mRoll"></div><div class="field"><label>Admission No.</label><input id="mAdm"></div><div class="field"><label>Class *</label><select id="mClass" onchange="renderMarkInputs()"></select></div><div class="field"><label>Section *</label><input id="mSection" placeholder="A"></div><div class="field"><label>Exam *</label><input id="mExam" placeholder="Annual Examination"></div><div class="field"><label>Class Teacher</label><input id="mTeacher"></div><div class="field"><label>Gender</label><select id="mGender"><option></option><option>Boy</option><option>Girl</option><option>Other</option></select></div><div class="field"><label>Date of Birth</label><input id="mDob" type="date"></div></div><div id="markInputs" class="subject-grid"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('studentModal')">Cancel</button><button class="btn btn-primary" onclick="saveStudent()">Save Result</button></div></div></div>
 <div id="reportModal" class="modal"><div class="modal-box" style="max-width:760px"><div class="modal-head"><h3>Generate Professional Report</h3><button class="close" onclick="closeModal('reportModal')">×</button></div><div class="report-meta"><div class="field"><label>School Name <span class="required">*</span></label><input id="rSchoolName"></div><div class="field"><label>Class Teacher Name <span class="required">*</span></label><input id="rTeacherName"></div><div class="field"><label>Academic Session</label><input id="rSession"></div><div class="field"><label>School Address</label><input id="rAddress"></div></div><div class="form-grid" style="margin-top:13px"><div class="field" id="rClassWrap"><label>Class</label><select id="rClass" onchange="cascadeFilters('r');refreshReportSubjects()"></select></div><div class="field" id="rSectionWrap"><label>Section</label><select id="rSection"></select></div><div class="field" id="rExamWrap"><label>Exam</label><select id="rExam"></select></div><div class="field" id="rSubjectWrap"><label>Subject</label><select id="rSubject"></select></div><div class="field" id="rStatusWrap"><label>Status</label><select id="rStatus"><option>Pass</option><option>Fail</option><option>Incomplete</option><option>All</option></select></div></div><input type="hidden" id="rType"><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('reportModal')">Cancel</button><button class="btn btn-outline" onclick="generateReport('xlsx')">⬇ Excel</button><button id="pdfReportBtn" class="btn btn-primary" onclick="generateReport('pdf')">⬇ PDF</button></div></div></div>
@@ -238,7 +238,7 @@ function installV4UI(){
    <div class="filters">
     <div class="field"><label>Class</label><select id="pClass" onchange="renderExamSettings()">${CLASSES.map(c=>`<option value="${c}">Class ${c}</option>`).join('')}</select></div>
    </div>
-   <div class="help"><b>JNV/CBSE-style configurable model:</b> the included values are only a starting model. Your school can edit every examination total, theory component and internal/practical component before entering marks. For Term (4-part IA), the internal component is split into four equal parts for calculation.</div>
+   <div class="help"><b>Exam Settings:</b> Edit exam name, total marks, theory marks and internal/practical marks for each class.</div>
    <div class="table-wrap" style="margin-top:14px;max-height:none">
     <table><thead><tr><th>Exam Name</th><th>Total Marks</th><th>Theory Marks</th><th>Internal / Practical</th><th>Calculation Type</th><th>Action</th></tr></thead><tbody id="examSettingsBody"></tbody></table>
    </div>
@@ -765,7 +765,7 @@ function installV5UI(){
    </details>`);
  }
  let p=document.querySelector('#reports .card:nth-of-type(5) p');
- if(p)p.textContent='Academic report cards in the supplied yellow / mint / peach school-report format, using saved student, marks, attendance, co-scholastic and signature data, with the supplied PM SHRI logo in the report header.';
+ if(p)p.textContent='Student A4 report cards.';
 }
 function readCoV5(){let o={};document.querySelectorAll('.co-grade-v5').forEach(e=>{if(e.value)o[e.dataset.coKey]=e.value});return o}
 function fillCoV5(r){document.querySelectorAll('.co-grade-v5').forEach(e=>e.value=r?.coScholastic?.[e.dataset.coKey]||'')}
@@ -999,7 +999,7 @@ function installV6UI(){
  let analysis=document.getElementById('analysis');
  if(analysis&&!document.getElementById('formulaAuditV6'))analysis.insertAdjacentHTML('beforeend',`<div class="card" style="margin-top:17px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3 class="section-title" style="margin-bottom:4px">Calculation & Formula Audit</h3><div class="muted">Checks marks limits, totals, maximum marks, percentages and saved component calculations.</div></div><button class="btn btn-green" onclick="runFormulaAuditV6()">✓ Check All Calculations</button></div><div id="formulaAuditV6" style="margin-top:12px"></div></div>`);
  let desc=document.querySelector('#reports .card:nth-of-type(1) p');
- if(desc)desc.textContent='Excel download in the same class-result register layout as the supplied XII-A workbook: school/exam heading, R.N., name, subject marks, total, %, rank and row-wise maximum marks.';
+ if(desc)desc.textContent='Class-wise result register with subject analysis.';
 }
 function showPhotoPreviewV6(data){
  let p=document.getElementById('photoPreviewV6');if(!p)return;
@@ -1083,7 +1083,7 @@ function downloadClassResultRegisterV6(meta){
  entries.forEach((e,i)=>{let a=XLSX.utils.encode_cell({r:4,c:helperStart+i});ws[a].s=helperHead});ws[XLSX.utils.encode_cell({r:4,c:lastIdx})].s=helperHead;
  for(let rr=5;rr<aoa.length;rr++){for(let cc=0;cc<mainCols;cc++){let a=XLSX.utils.encode_cell({r:rr,c:cc});if(!ws[a])ws[a]=excelCellV6('',body);ws[a].s=cc===1?nameSt:(cc>=2&&cc<totalIdx?markSt:sumSt);if(cc===pctIdx)ws[a].z='0.00'}for(let cc=helperStart;cc<=lastIdx;cc++){let a=XLSX.utils.encode_cell({r:rr,c:cc});if(!ws[a])ws[a]=excelCellV6('',helper);ws[a].s=helper}}
  ws['!merges']=[XLSX.utils.decode_range(`A1:${XLSX.utils.encode_col(mainCols-1)}1`),XLSX.utils.decode_range(`A2:${XLSX.utils.encode_col(mainCols-1)}2`)];ws['!cols']=Array(lastIdx+1).fill(null).map((_,i)=>({wch:i===0?9:i===1?27:(i>=2&&i<totalIdx?10:(i===spacerIdx?3:(i>=helperStart?9:10)))}));ws['!rows']=[{hpt:20},{hpt:24},{hpt:8},{hpt:22},{hpt:34},...rows.map(()=>({hpt:19}))];ws['!margins']={left:.25,right:.25,top:.4,bottom:.4,header:.2,footer:.2};ws['!pageSetup']={orientation:'landscape',fitToWidth:1,fitToHeight:0,paperSize:9};
- let wbOut=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wbOut,ws,`${romanClassV5(cl)} ${sec} ${exam}`.slice(0,31));XLSX.writeFile(wbOut,safe(`${meta.schoolName}_${romanClassV5(cl)}_${sec}_${exam}_Class_Result`)+'.xlsx');closeModal('reportModal');toast('Class result downloaded in supplied Excel format');
+ let wbOut=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wbOut,ws,`${romanClassV5(cl)} ${sec} ${exam}`.slice(0,31));XLSX.writeFile(wbOut,safe(`${meta.schoolName}_${romanClassV5(cl)}_${sec}_${exam}_Class_Result`)+'.xlsx');closeModal('reportModal');toast('Class result downloaded');
 }
 const _generateReportV6=generateReport;
 generateReport=function(format){let type=document.getElementById('rType').value;if(type==='class'&&format==='xlsx'){let meta=reportMeta();if(!validateMeta(meta))return;return downloadClassResultRegisterV6(meta)}return _generateReportV6(format)};
@@ -1103,4 +1103,268 @@ cardPDFV4=cardPDFV5;
 ensureV4State();state.records.forEach(r=>{if(!Array.isArray(r.subjectSelection))r.subjectSelection=seniorClassV6(r.className)?Object.keys(r.marks||{}):classSubjects(r.className);r.studentPhoto=clean(r.studentPhoto||'')});persist();installV6UI();document.getElementById('mClass').setAttribute('onchange','refreshStudentExamOptions()');renderAll();
 
 </script>
+
+<script>
+/* ===== V7: subject-wise statistical analysis block in class-result Excel ===== */
+function subjectAnalysisV7(rows, entry){
+  const appeared=[];
+  rows.forEach(r=>{
+    const m=resultEntryMarkV6(r,entry);
+    if(!validMark(m) || m.absent) return;
+    const score=n(m.score), max=n(m.max);
+    if(!Number.isFinite(score)||!Number.isFinite(max)||max<=0) return;
+    appeared.push({score,max,pct:score/max*100});
+  });
+  const count=appeared.length;
+  if(!count) return {avg:'',avgPct:'',highest:'',b95:0,b90:0,b75:0,b60:0,b50:0,b33:0,below33:0,appeared:0,pass:0,passPct:''};
+  const avg=appeared.reduce((a,x)=>a+x.score,0)/count;
+  const avgPct=appeared.reduce((a,x)=>a+x.pct,0)/count;
+  const highest=Math.max(...appeared.map(x=>x.score));
+  const bucket=(lo,hi=Infinity)=>appeared.filter(x=>x.pct>=lo&&x.pct<hi).length;
+  const pass=appeared.filter(x=>x.pct+1e-9>=Number(state.settings.subjectPassPercentage||33)).length;
+  return {
+    avg:+avg.toFixed(1), avgPct:+avgPct.toFixed(1), highest:+highest.toFixed(2),
+    b95:bucket(95), b90:bucket(90,95), b75:bucket(75,90), b60:bucket(60,75),
+    b50:bucket(50,60), b33:bucket(33,50), below33:appeared.filter(x=>x.pct<33).length,
+    appeared:count, pass, passPct:+(pass/count*100).toFixed(2)
+  };
+}
+function downloadClassResultRegisterV7(meta){
+  let cl=document.getElementById('rClass').value,sec=document.getElementById('rSection').value,exam=document.getElementById('rExam').value;
+  if(!cl||!sec||!exam)return toast('Select one Class, Section and Exam for this Excel format');
+  let rows=filtered(exam,cl,sec).slice().sort((a,b)=>String(a.rollNo).localeCompare(String(b.rollNo),undefined,{numeric:true})||clean(a.name).localeCompare(clean(b.name)));
+  if(!rows.length)return toast('No data for selected class, section and exam');
+
+  let entries=resultSubjectsV6(rows,cl),mainCols=2+entries.length+3,totalIdx=2+entries.length,pctIdx=totalIdx+1,rankIdx=totalIdx+2,
+      spacerIdx=rankIdx+1,helperStart=spacerIdx+1,lastIdx=helperStart+entries.length;
+  const statDefs=[
+    ['SUB AVG','avg'],['SUB AVG %','avgPct'],['Highest Marks','highest'],['95 & Above','b95'],['90-94 %','b90'],
+    ['75-89 %','b75'],['60-74 %','b60'],['50-59 %','b50'],[' 33-49 %','b33'],['BELOW 33 %','below33'],
+    ['TOTAL APRD STD','appeared'],['PASS','pass'],['PASS %','passPct']
+  ];
+  const blankAfterStudents=1, statStart=5+rows.length+blankAfterStudents, extraBottom=3;
+  let aoa=Array.from({length:statStart+statDefs.length+extraBottom},()=>Array(lastIdx+1).fill(''));
+
+  aoa[0][0]=(meta.schoolName||state.settings.schoolName||'JAWAHAR NAVODAYA VIDYALAYA').toUpperCase();
+  aoa[1][0]=`${exam}    ${meta.session||state.settings.session||''}`.trim();
+  aoa[3][0]='CLASS-';aoa[3][1]=`${romanClassV5(cl)}-${sec}`;
+  let maxTotals=uniq(rows.map(r=>String(calc(r).maximum)).filter(x=>x&&x!=='0'));
+  aoa[3][totalIdx]='MM -'+(maxTotals.join('/')||'');
+  aoa[4][0]='R.N.';aoa[4][1]='NAME';
+  entries.forEach((e,i)=>{
+    let mx=uniq(rows.map(r=>resultEntryMarkV6(r,e)).filter(m=>validMark(m)&&!m.absent).map(m=>String(+n(m.max).toFixed(2))));
+    aoa[4][2+i]=`${shortSubjectV6(e.name)}\n${mx.length===1?mx[0]:'MAX'}`;
+    aoa[4][helperStart+i]=shortSubjectV6(e.name);
+  });
+  aoa[4][totalIdx]='TOTAL';aoa[4][pctIdx]='%';aoa[4][rankIdx]='RANK';aoa[4][lastIdx]='Total';
+
+  let rm=new Map(ranks(rows).map(r=>[r.id,r._rank]));
+  rows.forEach((r,ri)=>{
+    let rr=5+ri,c=calc(r);aoa[rr][0]=r.rollNo;aoa[rr][1]=r.name;
+    entries.forEach((e,i)=>{
+      let m=resultEntryMarkV6(r,e);
+      aoa[rr][2+i]=validMark(m)?(m.absent?'AB':+n(m.score).toFixed(2)):'';
+      aoa[rr][helperStart+i]=validMark(m)?+n(m.max).toFixed(2):'';
+    });
+    aoa[rr][totalIdx]=c.obtained;aoa[rr][pctIdx]=+c.pct.toFixed(2);aoa[rr][rankIdx]=rm.get(r.id)||'';aoa[rr][lastIdx]=c.maximum;
+  });
+
+  // Automatic subject-analysis block requested by the user.
+  const stats=entries.map(e=>subjectAnalysisV7(rows,e));
+  statDefs.forEach(([label,key],rOffset)=>{
+    const rr=statStart+rOffset;aoa[rr][1]=label;
+    stats.forEach((s,i)=>aoa[rr][2+i]=s[key]);
+  });
+
+  let ws=XLSX.utils.aoa_to_sheet(aoa),
+      thin={top:{style:'thin',color:{rgb:'000000'}},bottom:{style:'thin',color:{rgb:'000000'}},left:{style:'thin',color:{rgb:'000000'}},right:{style:'thin',color:{rgb:'000000'}}},
+      title={font:{name:'Arial',bold:true,sz:12,color:{rgb:'FF6600'}},alignment:{horizontal:'center'}},
+      examSt={font:{name:'Arial',bold:true,sz:11,color:{rgb:'008000'}},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}},alignment:{horizontal:'center'}},
+      head={font:{name:'Arial',bold:true,sz:9},fill:{patternType:'solid',fgColor:{rgb:'F2F0E7'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:thin},
+      body={font:{name:'Arial',sz:9},alignment:{horizontal:'center',vertical:'center'},border:thin},
+      nameSt={font:{name:'Calibri',sz:10},alignment:{horizontal:'left',vertical:'center'},border:thin},
+      markSt={font:{name:'Arial',bold:true,sz:8},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}},alignment:{horizontal:'center',vertical:'center'},border:thin},
+      sumSt={font:{name:'Arial',sz:8},alignment:{horizontal:'center',vertical:'center'},border:thin},
+      helperHead={font:{name:'Arial',bold:true,sz:9},alignment:{horizontal:'center',vertical:'center',wrapText:true}},
+      helper={font:{name:'Arial',sz:9},alignment:{horizontal:'center',vertical:'center'}},
+      statLabel={font:{name:'Arial',bold:true,sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFF2CC'}},alignment:{horizontal:'left',vertical:'center'},border:thin},
+      statCell={font:{name:'Arial',bold:true,sz:9},fill:{patternType:'solid',fgColor:{rgb:'E2F0D9'}},alignment:{horizontal:'center',vertical:'center'},border:thin};
+
+  ws[XLSX.utils.encode_cell({r:0,c:0})].s=title;ws[XLSX.utils.encode_cell({r:1,c:0})].s=examSt;
+  for(let cc=0;cc<mainCols;cc++){
+    let a=XLSX.utils.encode_cell({r:1,c:cc});if(!ws[a])ws[a]=excelCellV6('',examSt);else ws[a].s=examSt;
+    let b=XLSX.utils.encode_cell({r:3,c:cc});if(!ws[b])ws[b]=excelCellV6('',{fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}}});else ws[b].s={font:{name:'Arial',bold:true,sz:9,color:{rgb:'008000'}},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}}};
+  }
+  for(let cc=0;cc<mainCols;cc++){let a=XLSX.utils.encode_cell({r:4,c:cc});if(!ws[a])ws[a]=excelCellV6('',head);ws[a].s=head}
+  entries.forEach((e,i)=>{let a=XLSX.utils.encode_cell({r:4,c:helperStart+i});ws[a].s=helperHead});ws[XLSX.utils.encode_cell({r:4,c:lastIdx})].s=helperHead;
+
+  for(let rr=5;rr<5+rows.length;rr++){
+    for(let cc=0;cc<mainCols;cc++){
+      let a=XLSX.utils.encode_cell({r:rr,c:cc});if(!ws[a])ws[a]=excelCellV6('',body);
+      ws[a].s=cc===1?nameSt:(cc>=2&&cc<totalIdx?markSt:sumSt);if(cc===pctIdx)ws[a].z='0.00';
+    }
+    for(let cc=helperStart;cc<=lastIdx;cc++){let a=XLSX.utils.encode_cell({r:rr,c:cc});if(!ws[a])ws[a]=excelCellV6('',helper);ws[a].s=helper}
+  }
+
+  statDefs.forEach(([label,key],rOffset)=>{
+    let rr=statStart+rOffset,labelCell=XLSX.utils.encode_cell({r:rr,c:1});if(!ws[labelCell])ws[labelCell]=excelCellV6(label,statLabel);ws[labelCell].s=statLabel;
+    entries.forEach((e,i)=>{
+      let a=XLSX.utils.encode_cell({r:rr,c:2+i});if(!ws[a])ws[a]=excelCellV6('',statCell);ws[a].s=statCell;
+      if(['avg','avgPct','passPct'].includes(key))ws[a].z='0.0';
+      else if(['b95','b90','b75','b60','b50','b33','below33','appeared','pass'].includes(key))ws[a].z='0';
+      else ws[a].z='0.00';
+    });
+  });
+
+  ws['!merges']=[XLSX.utils.decode_range(`A1:${XLSX.utils.encode_col(mainCols-1)}1`),XLSX.utils.decode_range(`A2:${XLSX.utils.encode_col(mainCols-1)}2`)];
+  ws['!cols']=Array(lastIdx+1).fill(null).map((_,i)=>({wch:i===0?9:i===1?27:(i>=2&&i<totalIdx?10:(i===spacerIdx?3:(i>=helperStart?9:10)))}));
+  ws['!rows']=[{hpt:20},{hpt:24},{hpt:8},{hpt:22},{hpt:34},...rows.map(()=>({hpt:19})),{hpt:8},...statDefs.map(()=>({hpt:19}))];
+  ws['!margins']={left:.25,right:.25,top:.4,bottom:.4,header:.2,footer:.2};
+  ws['!pageSetup']={orientation:'landscape',fitToWidth:1,fitToHeight:0,paperSize:9};
+
+  let wbOut=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wbOut,ws,`${romanClassV5(cl)} ${sec} ${exam}`.slice(0,31));
+  XLSX.writeFile(wbOut,safe(`${meta.schoolName}_${romanClassV5(cl)}_${sec}_${exam}_Class_Result`)+'.xlsx');
+  closeModal('reportModal');toast('Class result downloaded');
+}
+
+// Replace only the class-wise Excel export; all PDF/report-card logic remains V6.
+const _generateReportV7=generateReport;
+generateReport=function(format){
+  let type=document.getElementById('rType').value;
+  if(type==='class'&&format==='xlsx'){
+    let meta=reportMeta();if(!validateMeta(meta))return;return downloadClassResultRegisterV7(meta);
+  }
+  return _generateReportV7(format);
+};
+</script>
+
+
+<script>
+/* ===== V8: clean interface + one consistent class-result register format for VI-XII ===== */
+function cleanVisibleTextV8(){
+ const set=(sel,txt)=>{const e=document.querySelector(sel);if(e)e.textContent=txt};
+ set('.brand small','Classes VI–XII');
+ set('#dashboard .page-title p','');
+ set('#students .page-title p','');
+ set('#analysis .page-title p','');
+ set('#reports .page-title p','');
+ set('#import .page-title p','');
+ set('#subjects .page-title p','');
+ set('#settings .page-title p','');
+ set('#reports .card:nth-of-type(1) p','Class-wise result register with subject analysis.');
+ set('#reports .card:nth-of-type(2) p','Subject-wise marks and performance.');
+ set('#reports .card:nth-of-type(3) p','Pass, fail and incomplete students.');
+ set('#reports .card:nth-of-type(4) p','Class and subject toppers.');
+ set('#reports .card:nth-of-type(5) p','Student A4 report cards.');
+ set('#reports .card:nth-of-type(6) p','All class result registers in one Excel file.');
+ const side=document.querySelector('.side-note');
+ if(side)side.innerHTML='<b>Local Data</b><br>Edits and marks are saved in this browser.';
+ const ph=document.querySelector('#pattern .page-title p');if(ph)ph.textContent='';
+ const modelHelp=document.querySelector('#pattern .help');
+ if(modelHelp)modelHelp.innerHTML='<b>Exam Settings:</b> Edit exam name, total marks, theory marks and internal/practical marks for each class.';
+ const photoNote=document.querySelector('#mPhotoV6')?.parentElement?.querySelector('.muted');if(photoNote)photoNote.textContent='Passport-size student photo.';
+ const auditNote=document.querySelector('#formulaAuditV6')?.closest('.card')?.querySelector('.muted');if(auditNote)auditNote.textContent='Verify saved marks and calculations.';
+}
+
+function buildClassResultRegisterSheetV8(meta,cl,sec,exam){
+ let rows=filtered(exam,cl,sec).slice().sort((a,b)=>String(a.rollNo).localeCompare(String(b.rollNo),undefined,{numeric:true})||clean(a.name).localeCompare(clean(b.name)));
+ if(!rows.length)return null;
+ let entries=resultSubjectsV6(rows,cl),mainCols=2+entries.length+3,totalIdx=2+entries.length,pctIdx=totalIdx+1,rankIdx=totalIdx+2,
+     spacerIdx=rankIdx+1,helperStart=spacerIdx+1,lastIdx=helperStart+entries.length;
+ const statDefs=[
+  ['SUB AVG','avg'],['SUB AVG %','avgPct'],['Highest Marks','highest'],['95 & Above','b95'],['90-94 %','b90'],
+  ['75-89 %','b75'],['60-74 %','b60'],['50-59 %','b50'],['33-49 %','b33'],['BELOW 33 %','below33'],
+  ['TOTAL APRD STD','appeared'],['PASS','pass'],['PASS %','passPct']
+ ];
+ const statStart=6+rows.length;
+ let aoa=Array.from({length:statStart+statDefs.length+2},()=>Array(lastIdx+1).fill(''));
+ aoa[0][0]=(meta.schoolName||state.settings.schoolName||'JAWAHAR NAVODAYA VIDYALAYA').toUpperCase();
+ aoa[1][0]=`${exam}    ${meta.session||state.settings.session||''}`.trim();
+ aoa[3][0]='CLASS-';aoa[3][1]=`${romanClassV5(cl)}-${sec}`;
+ let maxTotals=uniq(rows.map(r=>String(calc(r).maximum)).filter(x=>x&&x!=='0'));
+ aoa[3][totalIdx]='MM -'+(maxTotals.join('/')||'');
+ aoa[4][0]='R.N.';aoa[4][1]='NAME';
+ entries.forEach((e,i)=>{
+  let mx=uniq(rows.map(r=>resultEntryMarkV6(r,e)).filter(m=>validMark(m)&&!m.absent).map(m=>String(+n(m.max).toFixed(2))));
+  aoa[4][2+i]=`${shortSubjectV6(e.name)}\n${mx.length===1?mx[0]:'MAX'}`;
+  aoa[4][helperStart+i]=shortSubjectV6(e.name);
+ });
+ aoa[4][totalIdx]='TOTAL';aoa[4][pctIdx]='%';aoa[4][rankIdx]='RANK';aoa[4][lastIdx]='Total';
+ let rm=new Map(ranks(rows).map(r=>[r.id,r._rank]));
+ rows.forEach((r,ri)=>{
+  let rr=5+ri,c=calc(r);aoa[rr][0]=r.rollNo;aoa[rr][1]=r.name;
+  entries.forEach((e,i)=>{let m=resultEntryMarkV6(r,e);aoa[rr][2+i]=validMark(m)?(m.absent?'AB':+n(m.score).toFixed(2)):'';aoa[rr][helperStart+i]=validMark(m)?+n(m.max).toFixed(2):''});
+  aoa[rr][totalIdx]=c.obtained;aoa[rr][pctIdx]=+c.pct.toFixed(2);aoa[rr][rankIdx]=rm.get(r.id)||'';aoa[rr][lastIdx]=c.maximum;
+ });
+ const stats=entries.map(e=>subjectAnalysisV7(rows,e));
+ statDefs.forEach(([label,key],ro)=>{let rr=statStart+ro;aoa[rr][1]=label;stats.forEach((s,i)=>aoa[rr][2+i]=s[key])});
+ let ws=XLSX.utils.aoa_to_sheet(aoa),
+ thin={top:{style:'thin',color:{rgb:'000000'}},bottom:{style:'thin',color:{rgb:'000000'}},left:{style:'thin',color:{rgb:'000000'}},right:{style:'thin',color:{rgb:'000000'}}},
+ title={font:{name:'Arial',bold:true,sz:12,color:{rgb:'FF6600'}},alignment:{horizontal:'center'}},
+ examSt={font:{name:'Arial',bold:true,sz:11,color:{rgb:'008000'}},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}},alignment:{horizontal:'center'}},
+ head={font:{name:'Arial',bold:true,sz:9},fill:{patternType:'solid',fgColor:{rgb:'F2F0E7'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:thin},
+ body={font:{name:'Arial',sz:9},alignment:{horizontal:'center',vertical:'center'},border:thin},
+ nameSt={font:{name:'Calibri',sz:10},alignment:{horizontal:'left',vertical:'center'},border:thin},
+ markSt={font:{name:'Arial',bold:true,sz:8},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}},alignment:{horizontal:'center',vertical:'center'},border:thin},
+ sumSt={font:{name:'Arial',sz:8},alignment:{horizontal:'center',vertical:'center'},border:thin},
+ helperHead={font:{name:'Arial',bold:true,sz:9},alignment:{horizontal:'center',vertical:'center',wrapText:true}},
+ helper={font:{name:'Arial',sz:9},alignment:{horizontal:'center',vertical:'center'}},
+ statLabel={font:{name:'Arial',bold:true,sz:9},fill:{patternType:'solid',fgColor:{rgb:'FFF2CC'}},alignment:{horizontal:'left',vertical:'center'},border:thin},
+ statCell={font:{name:'Arial',bold:true,sz:9},fill:{patternType:'solid',fgColor:{rgb:'E2F0D9'}},alignment:{horizontal:'center',vertical:'center'},border:thin};
+ ws[XLSX.utils.encode_cell({r:0,c:0})].s=title;ws[XLSX.utils.encode_cell({r:1,c:0})].s=examSt;
+ for(let cc=0;cc<mainCols;cc++){
+  let a=XLSX.utils.encode_cell({r:1,c:cc});if(!ws[a])ws[a]=excelCellV6('',examSt);else ws[a].s=examSt;
+  let b=XLSX.utils.encode_cell({r:3,c:cc});if(!ws[b])ws[b]=excelCellV6('',{fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}}});else ws[b].s={font:{name:'Arial',bold:true,sz:9,color:{rgb:'008000'}},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}}};
+ }
+ for(let cc=0;cc<mainCols;cc++){let a=XLSX.utils.encode_cell({r:4,c:cc});if(!ws[a])ws[a]=excelCellV6('',head);ws[a].s=head}
+ entries.forEach((e,i)=>{let a=XLSX.utils.encode_cell({r:4,c:helperStart+i});ws[a].s=helperHead});ws[XLSX.utils.encode_cell({r:4,c:lastIdx})].s=helperHead;
+ for(let rr=5;rr<5+rows.length;rr++){
+  for(let cc=0;cc<mainCols;cc++){let a=XLSX.utils.encode_cell({r:rr,c:cc});if(!ws[a])ws[a]=excelCellV6('',body);ws[a].s=cc===1?nameSt:(cc>=2&&cc<totalIdx?markSt:sumSt);if(cc===pctIdx)ws[a].z='0.00'}
+  for(let cc=helperStart;cc<=lastIdx;cc++){let a=XLSX.utils.encode_cell({r:rr,c:cc});if(!ws[a])ws[a]=excelCellV6('',helper);ws[a].s=helper}
+ }
+ statDefs.forEach(([label,key],ro)=>{
+  let rr=statStart+ro,l=XLSX.utils.encode_cell({r:rr,c:1});if(!ws[l])ws[l]=excelCellV6(label,statLabel);ws[l].s=statLabel;
+  entries.forEach((e,i)=>{let a=XLSX.utils.encode_cell({r:rr,c:2+i});if(!ws[a])ws[a]=excelCellV6('',statCell);ws[a].s=statCell;if(['avg','avgPct','passPct'].includes(key))ws[a].z='0.0';else if(['b95','b90','b75','b60','b50','b33','below33','appeared','pass'].includes(key))ws[a].z='0';else ws[a].z='0.00'});
+ });
+ ws['!merges']=[XLSX.utils.decode_range(`A1:${XLSX.utils.encode_col(mainCols-1)}1`),XLSX.utils.decode_range(`A2:${XLSX.utils.encode_col(mainCols-1)}2`)];
+ ws['!cols']=Array(lastIdx+1).fill(null).map((_,i)=>({wch:i===0?9:i===1?27:(i>=2&&i<totalIdx?10:(i===spacerIdx?3:(i>=helperStart?9:10)))}));
+ ws['!rows']=[{hpt:20},{hpt:24},{hpt:8},{hpt:22},{hpt:34},...rows.map(()=>({hpt:19})),{hpt:8},...statDefs.map(()=>({hpt:19}))];
+ ws['!margins']={left:.25,right:.25,top:.4,bottom:.4,header:.2,footer:.2};
+ ws['!pageSetup']={orientation:'landscape',fitToWidth:1,fitToHeight:0,paperSize:9};
+ return {ws,rows,entries};
+}
+
+function downloadClassResultRegisterV8(meta){
+ let cl=document.getElementById('rClass').value,sec=document.getElementById('rSection').value,exam=document.getElementById('rExam').value;
+ if(!cl||!sec||!exam)return toast('Select Class, Section and Exam');
+ let built=buildClassResultRegisterSheetV8(meta,cl,sec,exam);if(!built)return toast('No data for selected class, section and exam');
+ let wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,built.ws,`${romanClassV5(cl)} ${sec} ${exam}`.slice(0,31));
+ XLSX.writeFile(wb,safe(`${meta.schoolName}_${romanClassV5(cl)}_${sec}_${exam}_Class_Result`)+'.xlsx');closeModal('reportModal');toast('Class result downloaded');
+}
+
+function uniqueSheetNameV8(wb,base){let name=base.slice(0,31),tryName=name,i=2;while(wb.SheetNames.includes(tryName)){let suf=` ${i++}`;tryName=name.slice(0,31-suf.length)+suf}return tryName}
+exportCompleteExcel=function(meta={}){
+ let m={schoolName:meta.schoolName||state.settings.schoolName,address:meta.address||state.settings.address,session:meta.session||state.settings.session},wb=XLSX.utils.book_new(),made=0;
+ let combos=[];state.records.forEach(r=>{let k=[r.className,r.section,r.exam].join('|||');if(!combos.some(x=>x.k===k))combos.push({k,cl:r.className,sec:r.section,exam:r.exam})});
+ combos.sort((a,b)=>Number(a.cl)-Number(b.cl)||String(a.sec).localeCompare(String(b.sec),undefined,{numeric:true})||String(a.exam).localeCompare(String(b.exam)));
+ combos.forEach(x=>{let built=buildClassResultRegisterSheetV8(m,x.cl,x.sec,x.exam);if(!built)return;let sn=uniqueSheetNameV8(wb,`${romanClassV5(x.cl)} ${x.sec} ${x.exam}`);XLSX.utils.book_append_sheet(wb,built.ws,sn);made++});
+ if(!made)return toast('No result data available');
+ XLSX.writeFile(wb,safe((m.schoolName||'School')+'_All_Class_Results')+'.xlsx');closeModal('reportModal');toast('All class results downloaded');
+}
+
+const _generateReportV8=generateReport;
+generateReport=function(format){
+ let type=document.getElementById('rType').value;
+ if(type==='class'&&format==='xlsx'){let meta=reportMeta();if(!validateMeta(meta))return;return downloadClassResultRegisterV8(meta)}
+ if(type==='complete'){let meta=reportMeta();if(!validateMeta(meta))return;return exportCompleteExcel(meta)}
+ return _generateReportV8(format);
+};
+
+cleanVisibleTextV8();
+const _showPageV8=showPage;
+showPage=function(id){_showPageV8(id);cleanVisibleTextV8()};
+const _renderAllV8=renderAll;
+renderAll=function(){_renderAllV8();cleanVisibleTextV8()};
+</script>
+
 </body></html>
