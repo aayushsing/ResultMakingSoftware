@@ -858,7 +858,7 @@ function componentSeniorV5(rec,entry){
 }
 function combinedMarkV5(a,b){let ms=[a,b].filter(x=>x&&Number.isFinite(x.score)&&Number.isFinite(x.max)&&x.max>0);if(!ms.length)return{txt:'-',grade:'-'};let s=ms.reduce((z,x)=>z+x.score,0),m=ms.reduce((z,x)=>z+x.max,0);return{txt:`${+s.toFixed(2)}/${+m.toFixed(2)}`,grade:gradePctV5(s/m*100)}}
 function overallAcademicV5(r,t1,t2,entries){
- let recs=[t1,t2].filter((x,i,a)=>x&&a.findIndex(y=>y.id===x.id)===i);if(!recs.length)recs=[r];let obtained=0,maximum=0;
+ let recs=[t1,t2].filter((x,i,a)=>x&&a.findIndex(y=>y&&y.id===x.id)===i);if(!recs.length)recs=[r];let obtained=0,maximum=0;
  recs.forEach(rec=>{entries.forEach(e=>{let m=markForEntryV5(rec,e);if(!validMark(m))return;if(e.extra&&!m.includeInTotal)return;obtained+=n(m.score);maximum+=n(m.max)})});
  let pct=maximum?obtained/maximum*100:0;return{obtained:+obtained.toFixed(2),maximum:+maximum.toFixed(2),pct,grade:maximum?gradePctV5(pct):'-'};
 }
@@ -1358,6 +1358,24 @@ generateReport=function(format){
  if(type==='class'&&format==='xlsx'){let meta=reportMeta();if(!validateMeta(meta))return;return downloadClassResultRegisterV8(meta)}
  if(type==='complete'){let meta=reportMeta();if(!validateMeta(meta))return;return exportCompleteExcel(meta)}
  return _generateReportV8(format);
+};
+
+/* ===== V9: PDF reliability fix ===== */
+const _generateReportV9=generateReport;
+generateReport=function(format){
+ if(format!=='pdf')return _generateReportV9(format);
+ const btn=document.getElementById('pdfReportBtn');
+ try{
+  if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF library did not load. Please check internet connection and reopen this file.');
+  if(typeof window.jspdf.jsPDF.API?.autoTable!=='function')throw new Error('PDF table library did not load. Please check internet connection and reopen this file.');
+  if(btn){btn.disabled=true;btn.textContent='Generating PDF...'}
+  return _generateReportV9(format);
+ }catch(e){
+  console.error('PDF generation error:',e);
+  toast('PDF error: '+(e?.message||'Could not generate PDF'));
+ }finally{
+  if(btn){setTimeout(()=>{btn.disabled=false;btn.textContent='⬇ PDF'},250)}
+ }
 };
 
 cleanVisibleTextV8();
