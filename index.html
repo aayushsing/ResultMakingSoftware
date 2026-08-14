@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>JNV Result Studio</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <style>
@@ -947,4 +947,160 @@ cardPDFV4=cardPDFV5;
 ensureV5State();installV5UI();
 </script>
 
+
+<script>
+/* ===== V6: exact class-result Excel layout, senior subject combinations, AB support,
+   passport photo below PM SHRI logo, and calculation audit ===== */
+let pendingPhotoV6='';
+
+function seniorClassV6(cl){return Number(normalizeClass(cl))>=11}
+function cleanMarkRawV6(v){return clean(v).replace(/\s+/g,'')}
+const _parseFlexibleMarkV6=parseFlexibleMark;
+parseFlexibleMark=function(value,defaultMax){
+ let raw=cleanMarkRawV6(value);
+ if(/^(AB|ABSENT)$/i.test(raw)){
+  let mx=n(defaultMax);return Number.isFinite(mx)&&mx>0?{score:0,max:mx,absent:true}:{error:true};
+ }
+ return _parseFlexibleMarkV6(value,defaultMax);
+};
+function markTextV6(m){return validMark(m)?(m.absent?'AB':String(+n(m.score).toFixed(2))):''}
+function applicableSubjectsV6(r){
+ let configured=classSubjects(r.className),keys=Object.keys(r.marks||{}),selected=Array.isArray(r.subjectSelection)?r.subjectSelection.filter(Boolean):[];
+ if(!seniorClassV6(r.className))return uniq([...configured,...keys.filter(k=>!configured.includes(k))]);
+ let base=selected.length?selected:keys;
+ return uniq([...base,...keys]);
+}
+compareRank=function(a,b){let ca=calc(a),cb=calc(b);return cb.pct-ca.pct||cb.obtained-ca.obtained||clean(a.name).localeCompare(clean(b.name))};
+ranks=function(rows){let sorted=rows.filter(r=>calc(r).complete).sort(compareRank),lastPct=null,rank=0;return sorted.map((r,i)=>{let pct=calc(r).pct,key=pct.toFixed(8);if(key!==lastPct)rank=i+1;lastPct=key;return{...r,_rank:rank}})};
+
+calc=function(r){
+ let required=applicableSubjectsV6(r),present=required.map(s=>[s,r.marks?.[s]]).filter(([,m])=>validMark(m)),
+     missing=required.filter(s=>!validMark(r.marks?.[s])),invalid=required.filter(s=>r.marks?.[s]&&!validMark(r.marks?.[s]));
+ let extras=(r.extraSubjects||[]).filter(x=>x.includeInTotal&&validMark(x));
+ let obtained=present.reduce((a,[,m])=>a+n(m.score),0)+extras.reduce((a,m)=>a+n(m.score),0),
+     maximum=present.reduce((a,[,m])=>a+n(m.max),0)+extras.reduce((a,m)=>a+n(m.max),0),pct=maximum?obtained/maximum*100:0;
+ let failed=present.filter(([,m])=>n(m.score)<n(m.max)*state.settings.subjectPassPercentage/100).map(([s])=>s);
+ extras.filter(m=>n(m.score)<n(m.max)*state.settings.subjectPassPercentage/100).forEach(m=>failed.push('Extra: '+m.name));
+ let status=missing.length||invalid.length?'Incomplete':failed.length||pct<state.settings.passPercentage?'Fail':'Pass';
+ return{obtained:+obtained.toFixed(2),maximum:+maximum.toFixed(2),pct,missing,invalid,failed,status,grade:grade(pct,status),complete:status!=='Incomplete'};
+};
+
+function installV6UI(){
+ let dob=document.getElementById('mDob');
+ if(dob&&!document.getElementById('mPhotoV6'))dob.closest('.field').insertAdjacentHTML('afterend',`
+  <div class="field" style="grid-column:span 2"><label>Student Passport Photo</label>
+   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <div id="photoPreviewV6" style="width:72px;height:96px;border:1px solid var(--line);border-radius:8px;background:#f8fafc;display:grid;place-items:center;overflow:hidden;font-size:10px;color:var(--muted);text-align:center">No photo</div>
+    <div><input id="mPhotoV6" type="file" accept="image/*" onchange="handleStudentPhotoV6(this.files[0])"><div class="muted" style="font-size:11px;margin-top:5px">Automatically resized for local storage and A4 passport-size printing.</div><button type="button" class="btn btn-danger" style="padding:5px 8px;margin-top:7px" onclick="removeStudentPhotoV6()">Remove Photo</button></div>
+   </div>
+  </div>`);
+ let markHost=document.getElementById('markInputs');
+ if(markHost&&!document.getElementById('markHelpV6'))markHost.insertAdjacentHTML('beforebegin','<div id="markHelpV6" class="help" style="margin-top:14px">Enter a number or <b>AB</b>. For Classes XI–XII, tick only the subjects applicable to that student; blank unticked subjects are not treated as missing.</div>');
+ let analysis=document.getElementById('analysis');
+ if(analysis&&!document.getElementById('formulaAuditV6'))analysis.insertAdjacentHTML('beforeend',`<div class="card" style="margin-top:17px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3 class="section-title" style="margin-bottom:4px">Calculation & Formula Audit</h3><div class="muted">Checks marks limits, totals, maximum marks, percentages and saved component calculations.</div></div><button class="btn btn-green" onclick="runFormulaAuditV6()">✓ Check All Calculations</button></div><div id="formulaAuditV6" style="margin-top:12px"></div></div>`);
+ let desc=document.querySelector('#reports .card:nth-of-type(1) p');
+ if(desc)desc.textContent='Excel download in the same class-result register layout as the supplied XII-A workbook: school/exam heading, R.N., name, subject marks, total, %, rank and row-wise maximum marks.';
+}
+function showPhotoPreviewV6(data){
+ let p=document.getElementById('photoPreviewV6');if(!p)return;
+ p.innerHTML=data?`<img src="${data}" style="width:100%;height:100%;object-fit:cover">`:'No photo';
+}
+function removeStudentPhotoV6(){pendingPhotoV6='';let f=document.getElementById('mPhotoV6');if(f)f.value='';showPhotoPreviewV6('')}
+function handleStudentPhotoV6(file){
+ if(!file)return;if(!/^image\//.test(file.type))return toast('Please select an image file');if(file.size>10*1024*1024)return toast('Photo is too large; use an image below 10 MB');
+ let fr=new FileReader();fr.onload=()=>{let im=new Image();im.onload=()=>{
+  let cw=180,ch=240,canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;let ctx=canvas.getContext('2d'),target=cw/ch,src=im.width/im.height,sx=0,sy=0,sw=im.width,sh=im.height;
+  if(src>target){sw=im.height*target;sx=(im.width-sw)/2}else{sh=im.width/target;sy=(im.height-sh)/2}
+  ctx.drawImage(im,sx,sy,sw,sh,0,0,cw,ch);pendingPhotoV6=canvas.toDataURL('image/jpeg',.72);showPhotoPreviewV6(pendingPhotoV6)
+ };im.onerror=()=>toast('Could not read this photo');im.src=fr.result};fr.readAsDataURL(file);
+}
+
+renderMarkInputs=function(r=null){
+ let cl=document.getElementById('mClass')?.value||'6',exam=document.getElementById('mExam')?.value||examTypesForClass(cl)[0]||'',p=examPattern(cl,exam),old={};
+ document.querySelectorAll('#markInputs .subject-entry').forEach(x=>old[x.dataset.subject]={score:x.querySelector('.score')?.value,max:x.querySelector('.max')?.value,applicable:x.querySelector('.applicable-v6')?.checked});
+ let senior=seniorClassV6(cl),selected=new Set(r?.subjectSelection||[]);
+ document.getElementById('markInputs').innerHTML=classSubjects(cl).map(s=>{
+  let om=old[s],m=r?.marks?.[s],score=om?om.score:(m?(m.absent?'AB':m.score):''),mx=om?om.max:(m?.max??p.max),app=senior?(om?!!om.applicable:(selected.has(s)||!!m)):true;
+  return `<div class="subject-entry" data-subject="${esc(s)}"><b>${esc(s)}</b>${senior?`<label style="display:flex;gap:6px;align-items:center;font-size:11px;margin-bottom:7px"><input class="applicable-v6" type="checkbox" ${app?'checked':''}> Applicable subject</label>`:''}<div><input class="score" type="text" inputmode="decimal" placeholder="Marks / AB" value="${esc(score)}"><input class="max" type="number" min="0.01" step="0.01" placeholder="Maximum" value="${esc(mx)}"></div></div>`;
+ }).join('');
+};
+
+const _openStudentV6=openStudentModal;
+openStudentModal=function(r=null){
+ _openStudentV6(r);pendingPhotoV6=r?.studentPhoto||'';let f=document.getElementById('mPhotoV6');if(f)f.value='';showPhotoPreviewV6(pendingPhotoV6);renderMarkInputs(r);
+};
+
+saveStudent=function(){
+ let name=clean(document.getElementById('mName').value),roll=clean(document.getElementById('mRoll').value),adm=clean(document.getElementById('mAdm').value),cl=normalizeClass(document.getElementById('mClass').value),section=clean(document.getElementById('mSection').value).toUpperCase(),exam=clean(document.getElementById('mExam').value);
+ if(!name||!roll||!CLASSES.includes(cl)||!section||!exam)return toast('Complete name, roll, class, section and exam');
+ let duplicate=state.records.find(r=>r.id!==editingId&&r.className===cl&&norm(r.section)===norm(section)&&norm(r.exam)===norm(exam)&&(norm(r.rollNo)===norm(roll)||(adm&&norm(r.admissionNo)===norm(adm))));if(duplicate)return toast('This roll/admission number already exists for the selected class and exam');
+ let old=editingId?state.records.find(r=>r.id===editingId):null,marks={},bad=[],selection=[],senior=seniorClassV6(cl);
+ document.querySelectorAll('#markInputs .subject-entry').forEach(x=>{
+  let s=x.dataset.subject,raw=clean(x.querySelector('.score').value),maxRaw=clean(x.querySelector('.max').value),app=senior?!!x.querySelector('.applicable-v6')?.checked:true;if(raw)app=true;if(app)selection.push(s);if(!raw)return;
+  let mx=n(maxRaw);if(!Number.isFinite(mx)||mx<=0){bad.push(s);return}let pm=parseFlexibleMark(raw,mx);if(pm?.error){bad.push(s);return}
+  let oldM=old?.marks?.[s];if(oldM&&validMark(oldM)&&oldM.absent===!!pm.absent&&Math.abs(n(oldM.score)-n(pm.score))<.000001&&Math.abs(n(oldM.max)-n(pm.max))<.000001)marks[s]={...oldM};else marks[s]=pm;
+ });
+ let extra=readExtraSubjectsFromModal();bad.push(...extra.bad);if(bad.length)return toast('Invalid marks in: '+bad.join(', '));
+ let ap=clean(document.getElementById('mAttendancePresent')?.value),aw=clean(document.getElementById('mAttendanceWorking')?.value);if(ap!==''&&(!Number.isFinite(n(ap))||n(ap)<0))return toast('Attendance present days must be a valid number');if(aw!==''&&(!Number.isFinite(n(aw))||n(aw)<0))return toast('Total working days must be a valid number');if(ap!==''&&aw!==''&&n(ap)>n(aw))return toast('Attendance present days cannot be more than total working days');
+ let rec={...(old||{}),id:editingId||crypto.randomUUID(),name,rollNo:roll,admissionNo:adm,className:cl,section,exam,classTeacher:clean(document.getElementById('mTeacher').value),gender:document.getElementById('mGender').value,dob:document.getElementById('mDob').value,
+  fatherName:clean(document.getElementById('mFather').value),motherName:clean(document.getElementById('mMother').value),house:clean(document.getElementById('mHouse').value),guardianName:clean(document.getElementById('mGuardian').value),studentAddress:clean(document.getElementById('mStudentAddress')?.value),attendancePresent:ap,attendanceWorking:aw,coScholastic:readCoV5(),marks,extraSubjects:extra.out,subjectSelection:senior?uniq(selection):classSubjects(cl),studentPhoto:pendingPhotoV6||''};
+ if(editingId)state.records[state.records.findIndex(r=>r.id===editingId)]=rec;else state.records.push(rec);persist();closeModal('studentModal');renderAll();toast('Student data, marks and photo saved locally');
+};
+
+const _importAllSubjectV6=importAllSubjectExcel;
+importAllSubjectExcel=async function(file){
+ await _importAllSubjectV6(file);if(!file)return;
+ try{
+  let cl=document.getElementById('uClass').value,section=clean(document.getElementById('uSection').value).toUpperCase(),exam=clean(document.getElementById('uExam').value),pat=examPattern(cl,exam),subjects=classSubjects(cl),wb2=await readWorkbook(file),rows=XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{defval:''}),headers=rows.length?Object.keys(rows[0]):[],hm=new Map(headers.map(h=>[norm(h),h]));
+  for(let row of rows){
+   let roll=clean(rowValue(row,['rollno','rollnumber','roll'])),adm=clean(rowValue(row,['admissionno','admissionnumber','admno'])),cands=state.records.filter(r=>r.className===cl&&norm(r.section)===norm(section)&&norm(r.exam)===norm(exam)),rec=(adm&&cands.find(r=>norm(r.admissionNo)===norm(adm)))||(roll&&cands.find(r=>norm(r.rollNo)===norm(roll)));if(!rec)continue;
+   let selected=[];for(let s of subjects){let vals=[];if(pat.type==='term')vals=[s+' Theory',s+' Best UT',s+' Periodic Test',s+' Notebook',s+' Subject Enrichment',s+' Multiple Assessment'];else if(pat.type==='seniorTerm')vals=[s+' Theory',s+' Theory Max',s+' Maximum Marks',s+' Max',s+' Practical / Internal',s+' Practical',s+' Internal'];else vals=[s];let rawVals=vals.map(v=>hm.get(norm(v))).filter(Boolean).map(h=>row[h]),used=rawVals.some(v=>clean(v)!=='');if(!used)continue;selected.push(s);
+    let primary=pat.type==='term'?(hm.get(norm(s+' Theory'))||hm.get(norm(s))):pat.type==='seniorTerm'?(hm.get(norm(s+' Theory'))||hm.get(norm(s))):hm.get(norm(s));let raw=primary?clean(row[primary]):'';if(/^(AB|ABSENT)$/i.test(raw)){rec.marks[s]={score:0,max:pat.max,absent:true}}
+   }
+   rec.subjectSelection=seniorClassV6(cl)?uniq(selected):classSubjects(cl);
+  }
+  persist();renderAll();
+ }catch(e){console.warn('V6 subject-combination post-processing skipped',e)}
+};
+
+function resultEntryMarkV6(r,e){return e.extra?(r.extraSubjects||[]).find(x=>norm(x.name)===norm(e.name)):r.marks?.[e.name]}
+function resultSubjectsV6(rows,cl){
+ let configured=classSubjects(cl),reg=configured.filter(s=>rows.some(r=>applicableSubjectsV6(r).includes(s)||validMark(r.marks?.[s]))),known=new Set(reg.map(norm));
+ rows.forEach(r=>Object.keys(r.marks||{}).forEach(s=>{if(!known.has(norm(s))){known.add(norm(s));reg.push(s)}}));let extras=[],seen=new Set();rows.forEach(r=>(r.extraSubjects||[]).forEach(x=>{let k=norm(x.name);if(k&&!seen.has(k)){seen.add(k);extras.push(x.name)}}));return[...reg.map(name=>({name,extra:false})),...extras.map(name=>({name,extra:true}))];
+}
+function shortSubjectV6(s){let k=norm(s),map={english:'ENG',hindi:'HINDI',physics:'PHY',chemistry:'CHEM',mathematics:'MATHS',maths:'MATHS',computerscience:'CS',computer:'CS',biology:'BIO',yoga:'YOGA',physicaleducation:'PHE',informationtechnology:'IT',informaticspractices:'IP',accountancy:'ACC',businessstudies:'BST',economics:'ECO',history:'HIST',politicalscience:'POL SCI',geography:'GEO',sanskrit:'SANS'};if(map[k])return map[k];return clean(s).toUpperCase().replace(/[^A-Z0-9 ]/g,'').split(/\s+/).map(x=>x.slice(0,4)).join(' ').slice(0,12)}
+function excelCellV6(v,style){let c={v:v??''};if(typeof v==='number')c.t='n';else c.t='s';if(style)c.s=style;return c}
+function downloadClassResultRegisterV6(meta){
+ let cl=document.getElementById('rClass').value,sec=document.getElementById('rSection').value,exam=document.getElementById('rExam').value;if(!cl||!sec||!exam)return toast('Select one Class, Section and Exam for this Excel format');
+ let rows=filtered(exam,cl,sec).slice().sort((a,b)=>String(a.rollNo).localeCompare(String(b.rollNo),undefined,{numeric:true})||clean(a.name).localeCompare(clean(b.name)));if(!rows.length)return toast('No data for selected class, section and exam');
+ let entries=resultSubjectsV6(rows,cl),mainCols=2+entries.length+3,totalIdx=2+entries.length,pctIdx=totalIdx+1,rankIdx=totalIdx+2,spacerIdx=rankIdx+1,helperStart=spacerIdx+1,lastIdx=helperStart+entries.length,aoa=Array.from({length:5+rows.length},()=>Array(lastIdx+1).fill(''));
+ aoa[0][0]=(meta.schoolName||state.settings.schoolName||'JAWAHAR NAVODAYA VIDYALAYA').toUpperCase();aoa[1][0]=`${exam}    ${meta.session||state.settings.session||''}`.trim();aoa[3][0]='CLASS-';aoa[3][1]=`${romanClassV5(cl)}-${sec}`;
+ let maxTotals=uniq(rows.map(r=>String(calc(r).maximum)).filter(x=>x&&x!=='0'));aoa[3][totalIdx]='MM -'+(maxTotals.join('/')||'');aoa[4][0]='R.N.';aoa[4][1]='NAME';entries.forEach((e,i)=>{let mx=uniq(rows.map(r=>resultEntryMarkV6(r,e)).filter(validMark).map(m=>String(+n(m.max).toFixed(2))));aoa[4][2+i]=`${shortSubjectV6(e.name)}\n${mx.length===1?mx[0]:'MAX'}`;aoa[4][helperStart+i]=shortSubjectV6(e.name)});aoa[4][totalIdx]='TOTAL';aoa[4][pctIdx]='%';aoa[4][rankIdx]='RANK';aoa[4][lastIdx]='Total';
+ let rm=new Map(ranks(rows).map(r=>[r.id,r._rank]));rows.forEach((r,ri)=>{let rr=5+ri,c=calc(r);aoa[rr][0]=r.rollNo;aoa[rr][1]=r.name;entries.forEach((e,i)=>{let m=resultEntryMarkV6(r,e);aoa[rr][2+i]=validMark(m)?(m.absent?'AB':+n(m.score).toFixed(2)):'';aoa[rr][helperStart+i]=validMark(m)?+n(m.max).toFixed(2):''});aoa[rr][totalIdx]=c.obtained;aoa[rr][pctIdx]=+c.pct.toFixed(2);aoa[rr][rankIdx]=rm.get(r.id)||'';aoa[rr][lastIdx]=c.maximum});
+ let ws=XLSX.utils.aoa_to_sheet(aoa),thin={top:{style:'thin',color:{rgb:'000000'}},bottom:{style:'thin',color:{rgb:'000000'}},left:{style:'thin',color:{rgb:'000000'}},right:{style:'thin',color:{rgb:'000000'}}},title={font:{name:'Arial',bold:true,sz:12,color:{rgb:'FF6600'}},alignment:{horizontal:'center'}},examSt={font:{name:'Arial',bold:true,sz:11,color:{rgb:'008000'}},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}},alignment:{horizontal:'center'}},head={font:{name:'Arial',bold:true,sz:9},fill:{patternType:'solid',fgColor:{rgb:'F2F0E7'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:thin},body={font:{name:'Arial',sz:9},alignment:{horizontal:'center',vertical:'center'},border:thin},nameSt={font:{name:'Calibri',sz:10},alignment:{horizontal:'left',vertical:'center'},border:thin},markSt={font:{name:'Arial',bold:true,sz:8},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}},alignment:{horizontal:'center',vertical:'center'},border:thin},sumSt={font:{name:'Arial',sz:8},alignment:{horizontal:'center',vertical:'center'},border:thin},helperHead={font:{name:'Arial',bold:true,sz:9},alignment:{horizontal:'center',vertical:'center',wrapText:true}},helper={font:{name:'Arial',sz:9},alignment:{horizontal:'center',vertical:'center'}};
+ ws[XLSX.utils.encode_cell({r:0,c:0})].s=title;ws[XLSX.utils.encode_cell({r:1,c:0})].s=examSt;for(let cc=0;cc<mainCols;cc++){let a=XLSX.utils.encode_cell({r:1,c:cc});if(!ws[a])ws[a]=excelCellV6('',examSt);else ws[a].s=examSt;let b=XLSX.utils.encode_cell({r:3,c:cc});if(!ws[b])ws[b]=excelCellV6('',{fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}}});else ws[b].s={font:{name:'Arial',bold:true,sz:9,color:{rgb:'008000'}},fill:{patternType:'solid',fgColor:{rgb:'CCFFFF'}}};}
+ for(let cc=0;cc<mainCols;cc++){let a=XLSX.utils.encode_cell({r:4,c:cc});if(!ws[a])ws[a]=excelCellV6('',head);ws[a].s=head}
+ entries.forEach((e,i)=>{let a=XLSX.utils.encode_cell({r:4,c:helperStart+i});ws[a].s=helperHead});ws[XLSX.utils.encode_cell({r:4,c:lastIdx})].s=helperHead;
+ for(let rr=5;rr<aoa.length;rr++){for(let cc=0;cc<mainCols;cc++){let a=XLSX.utils.encode_cell({r:rr,c:cc});if(!ws[a])ws[a]=excelCellV6('',body);ws[a].s=cc===1?nameSt:(cc>=2&&cc<totalIdx?markSt:sumSt);if(cc===pctIdx)ws[a].z='0.00'}for(let cc=helperStart;cc<=lastIdx;cc++){let a=XLSX.utils.encode_cell({r:rr,c:cc});if(!ws[a])ws[a]=excelCellV6('',helper);ws[a].s=helper}}
+ ws['!merges']=[XLSX.utils.decode_range(`A1:${XLSX.utils.encode_col(mainCols-1)}1`),XLSX.utils.decode_range(`A2:${XLSX.utils.encode_col(mainCols-1)}2`)];ws['!cols']=Array(lastIdx+1).fill(null).map((_,i)=>({wch:i===0?9:i===1?27:(i>=2&&i<totalIdx?10:(i===spacerIdx?3:(i>=helperStart?9:10)))}));ws['!rows']=[{hpt:20},{hpt:24},{hpt:8},{hpt:22},{hpt:34},...rows.map(()=>({hpt:19}))];ws['!margins']={left:.25,right:.25,top:.4,bottom:.4,header:.2,footer:.2};ws['!pageSetup']={orientation:'landscape',fitToWidth:1,fitToHeight:0,paperSize:9};
+ let wbOut=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wbOut,ws,`${romanClassV5(cl)} ${sec} ${exam}`.slice(0,31));XLSX.writeFile(wbOut,safe(`${meta.schoolName}_${romanClassV5(cl)}_${sec}_${exam}_Class_Result`)+'.xlsx');closeModal('reportModal');toast('Class result downloaded in supplied Excel format');
+}
+const _generateReportV6=generateReport;
+generateReport=function(format){let type=document.getElementById('rType').value;if(type==='class'&&format==='xlsx'){let meta=reportMeta();if(!validateMeta(meta))return;return downloadClassResultRegisterV6(meta)}return _generateReportV6(format)};
+
+function runFormulaAuditV6(){
+ let issues=[],checked=0;state.records.forEach(r=>{checked++;let c=calc(r),req=applicableSubjectsV6(r),sum=0,max=0;req.forEach(s=>{let m=r.marks?.[s];if(!m)return;if(!validMark(m)){issues.push(`${r.name} (${r.exam}): invalid ${s} mark`);return}sum+=n(m.score);max+=n(m.max);if(n(m.score)>n(m.max))issues.push(`${r.name}: ${s} exceeds maximum`);let d=m.details||{};if(Number.isFinite(n(d.theory))&&Number.isFinite(n(d.internal))){let z=n(d.theory)+n(d.internal);if(Math.abs(z-n(m.score))>.02)issues.push(`${r.name}: ${s} term components do not equal saved total`)}if(Number.isFinite(n(d.theory))&&Number.isFinite(n(d.component))){let z=n(d.theory)+n(d.component);if(Math.abs(z-n(m.score))>.02)issues.push(`${r.name}: ${s} theory + practical/internal does not equal saved total`)}});(r.extraSubjects||[]).filter(x=>x.includeInTotal&&validMark(x)).forEach(m=>{sum+=n(m.score);max+=n(m.max)});sum=+sum.toFixed(2);max=+max.toFixed(2);if(Math.abs(sum-c.obtained)>.01||Math.abs(max-c.maximum)>.01)issues.push(`${r.name} (${r.exam}): total/max mismatch`);let pct=max?sum/max*100:0;if(Math.abs(pct-c.pct)>.01||!Number.isFinite(c.pct)||c.pct<0||c.pct>100.0001)issues.push(`${r.name} (${r.exam}): percentage mismatch`)});
+ let host=document.getElementById('formulaAuditV6');if(!host)return;host.innerHTML=issues.length?`<div class="error-box"><b>${issues.length} issue(s) found across ${checked} records.</b><div class="validation-list" style="margin-top:8px">${issues.slice(0,100).map(esc).join('<br>')}${issues.length>100?'<br>…more issues not shown':''}</div></div>`:`<div class="success-box"><b>All calculation checks passed.</b> ${checked} saved result records were checked for mark limits, totals, maximum marks, percentages and component sums.</div>`;
+}
+
+// Reposition the student photo: below the PM SHRI logo in a passport-size box.
+const _cardPDFV5Base=cardPDFV5;
+cardPDFV5=function(rows,meta){
+ let doc=_cardPDFV5Base(rows,meta);rows.forEach((r,i)=>{doc.setPage(i+1);doc.setFillColor(255,255,255);doc.setDrawColor(255,255,255);doc.rect(7,6,28,27,'FD');let x=172,y=28,w=21,h=28;doc.setFillColor(255,255,255);doc.setDrawColor(60,60,60);doc.setLineWidth(.35);doc.rect(x,y,w,h,'FD');if(r.studentPhoto){try{doc.addImage(r.studentPhoto,'JPEG',x+.7,y+.7,w-1.4,h-1.4)}catch(e){}}else{doc.setFont('helvetica','normal');doc.setFontSize(5.6);doc.setTextColor(110,110,110);doc.text('STUDENT',x+w/2,y+15,{align:'center'});doc.text('PHOTO',x+w/2,y+19,{align:'center'})}});return doc;
+};
+cardPDFV4=cardPDFV5;
+
+ensureV4State();state.records.forEach(r=>{if(!Array.isArray(r.subjectSelection))r.subjectSelection=seniorClassV6(r.className)?Object.keys(r.marks||{}):classSubjects(r.className);r.studentPhoto=clean(r.studentPhoto||'')});persist();installV6UI();document.getElementById('mClass').setAttribute('onchange','refreshStudentExamOptions()');renderAll();
+
+</script>
 </body></html>
