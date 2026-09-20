@@ -1831,4 +1831,225 @@ loadSettings();
 applyBrandingV13();
 </script>
 
+
+<script>
+/* ===== V14 FINAL STABILITY FIX =====
+   - fixes Excel sheet names for exam names such as "Annual / Board"
+   - adds a reliable CSV upload-template download
+   - keeps subject-wise best UT selection deterministic
+   - makes Annual report cards show UT-1, UT-2, Half-Yearly, UT-3, UT-4 and Annual
+   - keeps the Class XI-XII weighted annual calculation while using applicable subjects only
+   - replaces layered report-card drawing with one clean renderer to remove stray text/numbers
+*/
+
+function isHalfYearlyV12(exam){
+  const x=norm(exam);
+  if(!x)return false;
+  if(/annual|annualexam|annualboard|term2|termii|secondterm|preboard/.test(x))return false;
+  return /halfyearly|halfyear|midterm|term1|termi|firstterm/.test(x);
+}
+function isAnnualV12(exam){
+  const x=norm(exam);
+  if(!x||/halfyearly|halfyear|midterm|term1|termi|firstterm|preboard/.test(x))return false;
+  return /annual|annualexam|annualboard|yearlyexam|yearend|term2|termii|secondterm/.test(x);
+}
+
+function safeSheetNameV14(name, used=[]){
+  let base=clean(name||'Sheet').replace(/[\\\/\?\*\[\]:]/g,'-').replace(/^'+|'+$/g,'').replace(/\s+/g,' ').trim()||'Sheet';
+  base=base.slice(0,31);
+  let out=base,i=2;
+  while(used.includes(out)){
+    const suf=` ${i++}`;
+    out=base.slice(0,31-suf.length)+suf;
+  }
+  return out;
+}
+
+// Central Excel writer: invalid characters in exam names can never break a download.
+workbookDownload=function(sheets,name){
+  if(!window.XLSX)return toast('Excel library did not load. Please check internet connection and reopen this file.');
+  const wb=XLSX.utils.book_new();
+  for(const [sheet,data] of Object.entries(sheets)){
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    ws['!cols']=data[0]?.map((_,i)=>({wch:Math.min(35,Math.max(12,...data.map(r=>String(r[i]??'').length+2)))}));
+    XLSX.utils.book_append_sheet(wb,ws,safeSheetNameV14(sheet,wb.SheetNames));
+  }
+  XLSX.writeFile(wb,safe(name||'Result')+'.xlsx');
+};
+
+uniqueSheetNameV8=function(wb,base){return safeSheetNameV14(base,wb?.SheetNames||[])};
+
+downloadClassResultRegisterV8=function(meta){
+  const cl=document.getElementById('rClass').value,sec=document.getElementById('rSection').value,exam=document.getElementById('rExam').value;
+  if(!cl||!sec||!exam)return toast('Select Class, Section and Exam');
+  const built=buildClassResultRegisterSheetV8(meta,cl,sec,exam);if(!built)return toast('No data for selected class, section and exam');
+  const wb=XLSX.utils.book_new(),sheet=safeSheetNameV14(`${romanClassV5(cl)} ${sec} ${exam}`,wb.SheetNames);
+  XLSX.utils.book_append_sheet(wb,built.ws,sheet);
+  XLSX.writeFile(wb,safe(`${meta.schoolName}_${romanClassV5(cl)}_${sec}_${exam}_Class_Result`)+'.xlsx');
+  closeModal('reportModal');toast('Class result downloaded');
+};
+
+function templateRowsV14(){
+  const cl=document.getElementById('uClass')?.value||'6',exam=document.getElementById('uExam')?.value||examTypesForClass(cl)[0]||'Exam',pat=examPattern(cl,exam),subjects=classSubjects(cl);
+  const base=['Student Name','Roll No','Admission No','Gender','Date of Birth','Father Name','Mother Name','House','Guardian Name'],header=[...base];
+  if(pat.type==='term')subjects.forEach(s=>header.push(`${s} Theory`,`${s} Best UT`,`${s} Notebook`,`${s} Subject Enrichment`,`${s} Multiple Assessment`));
+  else if(pat.type==='seniorTerm')subjects.forEach(s=>header.push(`${s} Theory`,`${s} Theory Max`,`${s} Practical / Internal`));
+  else header.push(...subjects);
+  const sample=['Aarav Sharma','1','ADM001','Boy','2013-04-15','Rajesh Sharma','Sunita Sharma','Aravali','Rajesh Sharma'];
+  if(pat.type==='term'){
+    const utMax=configuredUTMax(cl),q=pat.componentMax/4;
+    subjects.forEach(()=>sample.push(Math.round(pat.theoryMax*.82),Math.round(utMax*.84),+q.toFixed(2),+(q*.8).toFixed(2),+q.toFixed(2)));
+  }else if(pat.type==='seniorTerm')subjects.forEach(s=>{let tm=seniorDefaultTheoryMax(s);if(!(tm>0&&tm<=pat.max))tm=pat.theoryMax;sample.push(Math.round(tm*.82),tm,Math.round((pat.max-tm)*.85))});
+  else subjects.forEach(()=>sample.push(Math.round(pat.max*.78)));
+  return {cl,exam,pat,subjects,header,sample};
+}
+
+// Rebuilt template download; Annual / Board now works because sheet names are sanitized.
+downloadAllSubjectTemplate=function(){
+  const t=templateRowsV14();
+  const instructions=[['CLASS-WISE EXAM UPLOAD TEMPLATE'],[`Class: ${t.cl}`],[`Exam: ${t.exam}`],[`Final subject maximum: ${t.pat.max}`],
+   ['Do not change column headings.'],
+   ['For Half-Yearly, the best subject-wise score from UT-1 and UT-2 is used when both are available.'],
+   ['For Annual, all saved UT and Half-Yearly records remain available for the final report card.'],
+   ['Classes XI-XII annual final: best UT-1/UT-2 + Half-Yearly (40%) and best UT-3/UT-4 + Annual (60%), with practical/internal averaged between terms.'],
+   ['Student profile fields can be corrected later from Students & Marks > Edit.']];
+  workbookDownload({[`Class ${t.cl} ${t.exam}`]:[t.header,t.sample],Instructions:instructions},safe(`Result_Class_${t.cl}_${t.exam}_Marks_Template`));
+};
+
+function csvEscapeV14(v){const s=String(v??'');return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+function downloadAllSubjectCSVTemplate(){
+  const t=templateRowsV14(),csv='\uFEFF'+[t.header,t.sample].map(r=>r.map(csvEscapeV14).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=safe(`Result_Class_${t.cl}_${t.exam}_Marks_Template`)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('CSV template downloaded');
+}
+
+function installCSVButtonV14(){
+  const rows=[...document.querySelectorAll('#import .list-row')];
+  const row=rows.find(x=>/Download all-subject class template/i.test(x.textContent||''));
+  if(!row||document.getElementById('csvTemplateBtnV14'))return;
+  const btn=row.querySelector('button');if(!btn)return;
+  const wrap=document.createElement('div');wrap.style.cssText='display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end';
+  btn.parentNode.insertBefore(wrap,btn);wrap.appendChild(btn);
+  const csv=document.createElement('button');csv.id='csvTemplateBtnV14';csv.className='btn btn-outline';csv.textContent='CSV';csv.onclick=downloadAllSubjectCSVTemplate;wrap.appendChild(csv);
+  btn.textContent='Excel';
+}
+
+// Best UT is selected separately for every subject. Percentage is primary so custom UT maxima are handled correctly.
+bestUTDetailV12=function(base,subject,termNo){
+  const vals=utRecordsForTermV12(base,subject,termNo);
+  if(!vals.length)return null;
+  vals.sort((a,b)=>b.pct-a.pct||b.score-a.score||a.no-b.no);
+  return vals[0];
+};
+bestUTPctV5=function(base,subject,termNo){const x=bestUTDetailV12(base,subject,termNo);return x?x.pct:NaN};
+
+// Senior Annual calculation: use only the subjects applicable to that student.
+const _calcV14Base=calc;
+calc=function(r){
+  if(Number(r?.className)<11||!isAnnualV12(r?.exam))return _calcV14Base(r);
+  const required=applicableSubjectsV6(r),missing=[],invalid=[],failed=[];let obtained=0,maximum=0;
+  required.forEach(subject=>{
+    const f=finalSeniorSubjectV12(r,subject);
+    if(!f.complete){missing.push(subject);return}
+    obtained+=f.total;maximum+=100;if(f.total<Number(state.settings.subjectPassPercentage||33))failed.push(subject);
+  });
+  (r.extraSubjects||[]).filter(x=>x.includeInTotal&&validMark(x)).forEach(x=>{obtained+=n(x.score);maximum+=n(x.max);if(n(x.score)<n(x.max)*state.settings.subjectPassPercentage/100)failed.push('Extra: '+x.name)});
+  const pct=maximum?obtained/maximum*100:0,status=missing.length||invalid.length?'Incomplete':failed.length||pct<state.settings.passPercentage?'Fail':'Pass';
+  return {obtained:+obtained.toFixed(2),maximum:+maximum.toFixed(2),pct,missing,invalid,failed,status,grade:grade(pct,status),complete:status!=='Incomplete'};
+};
+
+function studentExamRecordV14(base,predicate){return studentRecordsV5(base).find(x=>predicate(x.exam))||null}
+function utRecordV14(base,num){return studentExamRecordV14(base,e=>utNumberV12(e)===num)}
+function markTextFullV14(rec,subject){
+  const m=rec?.marks?.[subject];if(!validMark(m))return '';
+  return m.absent?'AB':`${+n(m.score).toFixed(2)}/${+n(m.max).toFixed(2)}`;
+}
+function bestUT12TextV14(base,subject){
+  const x=bestUTDetailV12(base,subject,1);return x?`${x.exam}: ${x.score}/${x.max}`:'';
+}
+function annualFinalMarkV14(base,subject){
+  if(Number(base.className)>=11){const f=finalSeniorSubjectV12(base,subject);if(f.complete)return {score:f.total,max:100,grade:f.grade}}
+  const m=base.marks?.[subject];if(validMark(m))return {score:n(m.score),max:n(m.max),grade:gradePctV5(n(m.score)/n(m.max)*100)};
+  return null;
+}
+function annualSubjectsV14(r){
+  const all=studentRecordsV5(r),seen=new Set(),out=[];
+  const add=s=>{const k=norm(s);if(k&&!seen.has(k)){seen.add(k);out.push(s)}};
+  (seniorClassV6(r.className)?applicableSubjectsV6(r):classSubjects(r.className)).forEach(add);
+  all.forEach(x=>Object.keys(x.marks||{}).forEach(add));
+  return out;
+}
+function compactCoRowsV14(r){
+  const keys=[...CO_A_V5,...CO_B_V5,...CO_C_V5],rows=[];
+  keys.forEach(k=>{const g=coGradeV5(r,k);if(g&&g!=='-')rows.push([k,g])});return rows;
+}
+function schoolHeaderV14(doc,meta){
+  const s=state.settings,w=doc.internal.pageSize.getWidth(),logo=s.schoolLogo||'';
+  if(logo){try{doc.addImage(logo,logoFormatV13(logo),9,8,18,18,undefined,'FAST')}catch(e){}}
+  doc.setTextColor(15,15,15);doc.setFont('helvetica','bold');doc.setFontSize(13);
+  const school=clean(meta.schoolName||s.schoolName||'SCHOOL NAME').toUpperCase();doc.text(doc.splitTextToSize(school,145).slice(0,2),w/2,11,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(5.8);const h=schoolHeaderLinesV13();let y=21;
+  if(h.address){doc.text(doc.splitTextToSize(h.address,145).slice(0,1),w/2,y,{align:'center'});y+=3.2}
+  if(h.contact){doc.text(doc.splitTextToSize(h.contact,145).slice(0,1),w/2,y,{align:'center'});y+=3.2}
+  if(h.codes)doc.text(doc.splitTextToSize(h.codes,145).slice(0,1),w/2,y,{align:'center'});
+}
+function studentHeaderV14(doc,r,meta,title){
+  const s=state.settings;schoolHeaderV14(doc,meta);doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.text(title,105,34,{align:'center'});
+  doc.setFontSize(6.4);doc.text(`SESSION: ${meta.session||s.session||'-'}   |   CLASS: ${romanClassV5(r.className)}${r.section?' - '+r.section:''}`,105,39,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+  const L=[`Student: ${r.name||'-'}`,`Father: ${profileValueV5(r,'fatherName')||'-'}`,`Mother: ${profileValueV5(r,'motherName')||'-'}`,`House: ${profileValueV5(r,'house')||'-'}`];
+  const R=[`Roll No: ${r.rollNo||'-'}`,`Admission No: ${r.admissionNo||'-'}`,`DOB: ${dateV5(r.dob)}`,`Exam: ${r.exam||'-'}`];
+  L.forEach((t,i)=>doc.text(t,9,47+i*4.3,{maxWidth:92}));R.forEach((t,i)=>doc.text(t,108,47+i*4.3,{maxWidth:72}));
+  const x=181,y=42,pw=18,ph=24;doc.setDrawColor(100);doc.rect(x,y,pw,ph);if(r.studentPhoto){try{doc.addImage(r.studentPhoto,'JPEG',x+.5,y+.5,pw-1,ph-1)}catch(e){}}
+}
+function statusTextV14(m){if(!m)return'';return n(m.score)<n(m.max)*state.settings.subjectPassPercentage/100?'Fail':'Pass'}
+function cleanReportCardPDFV14(rows,meta){
+  const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  rows.forEach((r,idx)=>{
+    if(idx)doc.addPage();doc.setDrawColor(40);doc.setLineWidth(.3);doc.rect(5,5,200,287);
+    const annual=isAnnualV12(r.exam),title=annual?'ANNUAL ACADEMIC REPORT':'ACADEMIC REPORT';studentHeaderV14(doc,r,meta,title);
+    let y=70;
+    if(annual){
+      const u1=utRecordV14(r,1),u2=utRecordV14(r,2),hy=studentExamRecordV14(r,isHalfYearlyV12),u3=utRecordV14(r,3),u4=utRecordV14(r,4),ann=studentExamRecordV14(r,isAnnualV12)||r;
+      const subs=annualSubjectsV14(r),body=subs.map(s=>{const f=annualFinalMarkV14(r,s);return [s,markTextFullV14(u1,s),markTextFullV14(u2,s),bestUT12TextV14(r,s),markTextFullV14(hy,s),markTextFullV14(u3,s),markTextFullV14(u4,s),markTextFullV14(ann,s),f?`${+f.score.toFixed(2)}/${+f.max.toFixed(2)}`:'',f?.grade||'']});
+      doc.autoTable({startY:y,margin:{left:7,right:7},tableWidth:196,head:[['Subject','UT-1','UT-2','Best UT-1/2','Half-Yearly','UT-3','UT-4','Annual','Final','Grade']],body,theme:'grid',
+        headStyles:{fillColor:[37,99,235],textColor:[255,255,255],fontStyle:'bold',fontSize:5.2,halign:'center',valign:'middle'},styles:{fontSize:5.1,cellPadding:1.2,lineWidth:.15,lineColor:[80,80,80],halign:'center',valign:'middle',overflow:'linebreak'},columnStyles:{0:{cellWidth:28,halign:'left',fontStyle:'bold'},1:{cellWidth:15},2:{cellWidth:15},3:{cellWidth:25},4:{cellWidth:19},5:{cellWidth:15},6:{cellWidth:15},7:{cellWidth:18},8:{cellWidth:18},9:{cellWidth:10}}});
+      y=doc.lastAutoTable.finalY+4;
+      doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.text('Best UT-1/2 is selected separately for each subject. Blank cells mean that exam mark is not saved for that subject.',7,y,{maxWidth:196});y+=5;
+      if(Number(r.className)>=11){doc.text('Final XI-XII rule: Term-I = best UT-1/UT-2 + Half-Yearly theory (40%); Term-II = best UT-3/UT-4 + Annual theory (60%); practical/internal is averaged.',7,y,{maxWidth:196});y+=6}
+    }else{
+      const subs=applicableSubjectsV6(r),body=subs.map(s=>{const m=r.marks?.[s];return [s,validMark(m)?(m.absent?'AB':+n(m.score).toFixed(2)):'',validMark(m)?+n(m.max).toFixed(2):'',validMark(m)?(n(m.score)/n(m.max)*100).toFixed(2)+'%':'',validMark(m)?gradePctV5(n(m.score)/n(m.max)*100):'',validMark(m)?statusTextV14(m):'Missing']});
+      doc.autoTable({startY:y,margin:{left:12,right:12},head:[['Subject','Obtained','Maximum','Percentage','Grade','Status']],body,theme:'grid',headStyles:{fillColor:[37,99,235],textColor:[255,255,255]},styles:{fontSize:7,cellPadding:1.8,lineWidth:.15,lineColor:[80,80,80]},columnStyles:{0:{cellWidth:62,fontStyle:'bold'}}});y=doc.lastAutoTable.finalY+5;
+    }
+    const c=calc(r),rank=ranks(filtered(r.exam,r.className,r.section)).find(x=>x.id===r.id)?._rank||'-',attP=profileValueV5(r,'attendancePresent')||'-',attW=profileValueV5(r,'attendanceWorking')||'-';
+    doc.autoTable({startY:y,margin:{left:7,right:7},tableWidth:196,body:[['Attendance',`${attP}/${attW}`,'Total',`${c.obtained}/${c.maximum}`,'Percentage',`${c.pct.toFixed(2)}%`,'Grade',c.grade,'Rank',rank,'Result',c.status]],theme:'grid',styles:{fontSize:5.6,cellPadding:1.35,lineWidth:.15,lineColor:[80,80,80],halign:'center'},didParseCell:d=>{if(d.section==='body'&&[0,2,4,6,8,10].includes(d.column.index)){d.cell.styles.fontStyle='bold';d.cell.styles.fillColor=[255,236,179]}}});
+    y=doc.lastAutoTable.finalY+4;
+    const co=compactCoRowsV14(r);if(co.length&&y<238){doc.autoTable({startY:y,margin:{left:7,right:105},tableWidth:98,head:[['Co-Scholastic Area','Grade']],body:co,theme:'grid',headStyles:{fillColor:[204,248,229],textColor:[20,20,20],fontSize:5.8},styles:{fontSize:5.5,cellPadding:1.0,lineWidth:.15,lineColor:[80,80,80]}});y=Math.max(y,doc.lastAutoTable.finalY+3)}
+    const missing=c.missing||[];doc.setFont('helvetica','normal');doc.setFontSize(6);if(missing.length&&y<252){doc.text(`Missing Subjects: ${missing.join(', ')}`,8,y,{maxWidth:194});y+=5}
+    const remark=c.status==='Pass'?(c.pct>=75?'Excellent performance. Keep progressing with confidence.':'Good effort. Continue regular practice for further improvement.'):(c.status==='Incomplete'?'Result is incomplete because some required marks are missing.':'Needs focused support and regular subject-wise practice.');
+    if(y<258){doc.setFont('helvetica','bold');doc.text("Class Teacher's Remark:",8,y);doc.setFont('helvetica','normal');doc.text(remark,42,y,{maxWidth:156})}
+    const signY=276,xs=[28,79,130,181],names=[meta.teacherName||r.classTeacher||state.settings.classTeacher||'',state.settings.vicePrincipal||'',state.settings.principal||'',profileValueV5(r,'guardianName')||''],labels=['Class Teacher','Vice Principal','Principal','Parent / Guardian'];
+    xs.forEach((x,k)=>{doc.line(x-16,signY-6,x+16,signY-6);doc.setFont('helvetica','normal');doc.setFontSize(5.2);if(names[k])doc.text(doc.splitTextToSize(names[k],32).slice(0,1),x,signY-2,{align:'center'});doc.setFont('helvetica','bold');doc.setFontSize(5.6);doc.text(labels[k],x,signY+3,{align:'center'})});
+  });
+  return doc;
+}
+
+// One clean renderer only: no stacked PDF wrappers, which removes stray/overlapping letters and numbers.
+cardPDFV5=cleanReportCardPDFV14;
+cardPDFV4=cleanReportCardPDFV14;
+
+function runStabilityCheckV14(){
+  const issues=[];
+  try{CLASSES.forEach(cl=>{const cfg=schoolExamConfig(cl);if(!Array.isArray(cfg)||!cfg.length)issues.push(`Class ${cl}: no exam settings`);cfg.forEach(x=>{if(!clean(x.name))issues.push(`Class ${cl}: blank exam name`);if(!(n(x.max)>0))issues.push(`Class ${cl} ${x.name}: invalid maximum`)})})}catch(e){issues.push('Exam settings check failed')}
+  state.records.forEach(r=>{const c=calc(r);if(!Number.isFinite(c.pct)||c.pct<0||c.pct>100.0001)issues.push(`${r.name} (${r.exam}): invalid percentage`);Object.entries(r.marks||{}).forEach(([s,m])=>{if(!validMark(m))issues.push(`${r.name} (${r.exam}): invalid ${s} mark`)})});
+  return issues;
+}
+
+installCSVButtonV14();
+const _renderAllV14=renderAll;renderAll=function(){_renderAllV14();installCSVButtonV14()};
+const _showPageV14=showPage;showPage=function(id,btn){_showPageV14(id,btn);if(id==='import')installCSVButtonV14()};
+window.addEventListener('error',e=>console.error('RMS runtime error:',e.error||e.message));
+console.info('RMS V14 stability check:',runStabilityCheckV14());
+</script>
+
 </body></html>
