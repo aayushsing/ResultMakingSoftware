@@ -1837,7 +1837,7 @@ applyBrandingV13();
    - fixes Excel sheet names for exam names such as "Annual / Board"
    - adds a reliable CSV upload-template download
    - keeps subject-wise best UT selection deterministic
-   - makes Annual report cards show UT-1, UT-2, Half-Yearly, UT-3, UT-4 and Annual
+   - makes Annual report cards show UT-1, UT-2, Best UT-1/2, Half-Yearly, UT-3, UT-4, Best UT-3/4 and Annual
    - keeps the Class XI-XII weighted annual calculation while using applicable subjects only
    - replaces layered report-card drawing with one clean renderer to remove stray text/numbers
 */
@@ -1910,7 +1910,7 @@ downloadAllSubjectTemplate=function(){
   const instructions=[['CLASS-WISE EXAM UPLOAD TEMPLATE'],[`Class: ${t.cl}`],[`Exam: ${t.exam}`],[`Final subject maximum: ${t.pat.max}`],
    ['Do not change column headings.'],
    ['For Half-Yearly, the best subject-wise score from UT-1 and UT-2 is used when both are available.'],
-   ['For Annual, all saved UT and Half-Yearly records remain available for the final report card.'],
+   ['For Annual, UT-1 vs UT-2 and UT-3 vs UT-4 are compared separately for every subject; the better score from each pair is used.'],
    ['Classes XI-XII annual final: best UT-1/UT-2 + Half-Yearly (40%) and best UT-3/UT-4 + Annual (60%), with practical/internal averaged between terms.'],
    ['Student profile fields can be corrected later from Students & Marks > Edit.']];
   workbookDownload({[`Class ${t.cl} ${t.exam}`]:[t.header,t.sample],Instructions:instructions},safe(`Result_Class_${t.cl}_${t.exam}_Marks_Template`));
@@ -1967,6 +1967,9 @@ function markTextFullV14(rec,subject){
 function bestUT12TextV14(base,subject){
   const x=bestUTDetailV12(base,subject,1);return x?`${x.exam}: ${x.score}/${x.max}`:'';
 }
+function bestUT34TextV14(base,subject){
+  const x=bestUTDetailV12(base,subject,2);return x?`${x.exam}: ${x.score}/${x.max}`:'';
+}
 function annualFinalMarkV14(base,subject){
   if(Number(base.className)>=11){const f=finalSeniorSubjectV12(base,subject);if(f.complete)return {score:f.total,max:100,grade:f.grade}}
   const m=base.marks?.[subject];if(validMark(m))return {score:n(m.score),max:n(m.max),grade:gradePctV5(n(m.score)/n(m.max)*100)};
@@ -2011,11 +2014,11 @@ function cleanReportCardPDFV14(rows,meta){
     let y=70;
     if(annual){
       const u1=utRecordV14(r,1),u2=utRecordV14(r,2),hy=studentExamRecordV14(r,isHalfYearlyV12),u3=utRecordV14(r,3),u4=utRecordV14(r,4),ann=studentExamRecordV14(r,isAnnualV12)||r;
-      const subs=annualSubjectsV14(r),body=subs.map(s=>{const f=annualFinalMarkV14(r,s);return [s,markTextFullV14(u1,s),markTextFullV14(u2,s),bestUT12TextV14(r,s),markTextFullV14(hy,s),markTextFullV14(u3,s),markTextFullV14(u4,s),markTextFullV14(ann,s),f?`${+f.score.toFixed(2)}/${+f.max.toFixed(2)}`:'',f?.grade||'']});
-      doc.autoTable({startY:y,margin:{left:7,right:7},tableWidth:196,head:[['Subject','UT-1','UT-2','Best UT-1/2','Half-Yearly','UT-3','UT-4','Annual','Final','Grade']],body,theme:'grid',
-        headStyles:{fillColor:[37,99,235],textColor:[255,255,255],fontStyle:'bold',fontSize:5.2,halign:'center',valign:'middle'},styles:{fontSize:5.1,cellPadding:1.2,lineWidth:.15,lineColor:[80,80,80],halign:'center',valign:'middle',overflow:'linebreak'},columnStyles:{0:{cellWidth:28,halign:'left',fontStyle:'bold'},1:{cellWidth:15},2:{cellWidth:15},3:{cellWidth:25},4:{cellWidth:19},5:{cellWidth:15},6:{cellWidth:15},7:{cellWidth:18},8:{cellWidth:18},9:{cellWidth:10}}});
+      const subs=annualSubjectsV14(r),body=subs.map(s=>{const f=annualFinalMarkV14(r,s);return [s,markTextFullV14(u1,s),markTextFullV14(u2,s),bestUT12TextV14(r,s),markTextFullV14(hy,s),markTextFullV14(u3,s),markTextFullV14(u4,s),bestUT34TextV14(r,s),markTextFullV14(ann,s),f?`${+f.score.toFixed(2)}/${+f.max.toFixed(2)}`:'',f?.grade||'']});
+      doc.autoTable({startY:y,margin:{left:7,right:7},tableWidth:196,head:[['Subject','UT-1','UT-2','Best UT-1/2','Half-Yearly','UT-3','UT-4','Best UT-3/4','Annual','Final','Grade']],body,theme:'grid',
+        headStyles:{fillColor:[37,99,235],textColor:[255,255,255],fontStyle:'bold',fontSize:4.8,halign:'center',valign:'middle'},styles:{fontSize:4.85,cellPadding:1.05,lineWidth:.15,lineColor:[80,80,80],halign:'center',valign:'middle',overflow:'linebreak'},columnStyles:{0:{cellWidth:26,halign:'left',fontStyle:'bold'},1:{cellWidth:12},2:{cellWidth:12},3:{cellWidth:20},4:{cellWidth:17},5:{cellWidth:12},6:{cellWidth:12},7:{cellWidth:20},8:{cellWidth:16},9:{cellWidth:16},10:{cellWidth:9}}});
       y=doc.lastAutoTable.finalY+4;
-      doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.text('Best UT-1/2 is selected separately for each subject. Blank cells mean that exam mark is not saved for that subject.',7,y,{maxWidth:196});y+=5;
+      doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.text('Best UT-1/2 and Best UT-3/4 are selected separately for every subject. Blank cells mean that exam mark is not saved for that subject.',7,y,{maxWidth:196});y+=5;
       if(Number(r.className)>=11){doc.text('Final XI-XII rule: Term-I = best UT-1/UT-2 + Half-Yearly theory (40%); Term-II = best UT-3/UT-4 + Annual theory (60%); practical/internal is averaged.',7,y,{maxWidth:196});y+=6}
     }else{
       const subs=applicableSubjectsV6(r),body=subs.map(s=>{const m=r.marks?.[s];return [s,validMark(m)?(m.absent?'AB':+n(m.score).toFixed(2)):'',validMark(m)?+n(m.max).toFixed(2):'',validMark(m)?(n(m.score)/n(m.max)*100).toFixed(2)+'%':'',validMark(m)?gradePctV5(n(m.score)/n(m.max)*100):'',validMark(m)?statusTextV14(m):'Missing']});
